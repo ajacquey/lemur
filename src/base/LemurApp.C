@@ -1,0 +1,49 @@
+#include "LemurApp.h"
+#include "Moose.h"
+#include "AppFactory.h"
+#include "ModulesApp.h"
+#include "MooseSyntax.h"
+
+InputParameters
+LemurApp::validParams()
+{
+  InputParameters params = MooseApp::validParams();
+  return params;
+}
+
+LemurApp::LemurApp(InputParameters parameters) : MooseApp(parameters)
+{
+  LemurApp::registerAll(_factory, _action_factory, _syntax);
+}
+
+LemurApp::~LemurApp() {}
+
+void
+LemurApp::registerAll(Factory & f, ActionFactory & af, Syntax & s)
+{
+  ModulesApp::registerAll(f, af, s);
+  Registry::registerObjectsTo(f, {"LemurApp"});
+  Registry::registerActionsTo(af, {"LemurApp"});
+
+  /* register custom execute flags, action syntax, etc. here */
+}
+
+void
+LemurApp::registerApps()
+{
+  registerApp(LemurApp);
+}
+
+/***************************************************************************************************
+ *********************** Dynamic Library Entry Points - DO NOT MODIFY ******************************
+ **************************************************************************************************/
+extern "C" void
+LemurApp__registerAll(Factory & f, ActionFactory & af, Syntax & s)
+{
+  LemurApp::registerAll(f, af, s);
+}
+extern "C" void
+LemurApp__registerApps()
+{
+  LemurApp::registerApps();
+}
