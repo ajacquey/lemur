@@ -145,9 +145,6 @@ LMAlphaGammaYield<compute_stage>::preReturnMap()
     _pcr_tr = _pcr0 * std::exp(-_L * (*_intnl_old)[_qp]);
   }
 
-  _A = (1.0 - _gamma) * _pressure_tr + 0.5 * _gamma * _pcr;
-  _B = _M * ((1.0 - _alpha) * _pressure_tr + 0.5 * _alpha * _gamma * _pcr);
-
   _chi_v_tr = _pressure_tr - 0.5 * _gamma * _pcr_tr;
   _chi_d_tr = _eqv_stress_tr;
 }
@@ -207,24 +204,27 @@ LMAlphaGammaYield<compute_stage>::calculateProjectionDerivV(const ADReal & chi_v
 
   ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
 
-  dchi_v0 =
-      rho_0 / rho_tr *
-          (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
-               Utility::pow<2>(ev) +
-           1.0) *
-          Utility::pow<2>(ed) * dchi_v +
-      Utility::pow<3>(rho_0) *
-          (Utility::pow<2>(ev) / Utility::pow<3>(_A) + Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
-          ev;
-  dchi_d0 =
-      rho_0 / rho_tr *
-          (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
-               Utility::pow<2>(ed) -
-           1.0) *
-          ev * ed * dchi_v +
-      Utility::pow<3>(rho_0) *
-          (Utility::pow<2>(ev) / Utility::pow<3>(_A) + Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
-          ed;
+  ADReal dA = 0.0, dB = 0.0;
+  updateYieldParametersDerivV(dA, dB);
+
+  dchi_v0 = rho_0 / rho_tr *
+                (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
+                     Utility::pow<2>(ev) +
+                 1.0) *
+                Utility::pow<2>(ed) * dchi_v +
+            Utility::pow<3>(rho_0) *
+                (dA * Utility::pow<2>(ev) / Utility::pow<3>(_A) +
+                 dB * Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
+                ev;
+  dchi_d0 = rho_0 / rho_tr *
+                (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
+                     Utility::pow<2>(ed) -
+                 1.0) *
+                ev * ed * dchi_v +
+            Utility::pow<3>(rho_0) *
+                (dA * Utility::pow<2>(ev) / Utility::pow<3>(_A) +
+                 dB * Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
+                ed;
 }
 
 template <ComputeStage compute_stage>
@@ -255,6 +255,14 @@ LMAlphaGammaYield<compute_stage>::calculateProjectionDerivD(const ADReal & chi_v
 }
 
 template <ComputeStage compute_stage>
+void
+LMAlphaGammaYield<compute_stage>::updateYieldParametersDerivV(ADReal & dA, ADReal & dB)
+{
+  dA = -(1.0 - _gamma) * _K * _dt + 0.5 * _gamma * _L * _dt * _pcr;
+  dB = _M * (-(1.0 - _alpha) * _K * _dt + 0.5 * _alpha * _gamma * _L * _dt * _pcr);
+}
+
+template <ComputeStage compute_stage>
 ADReal
 LMAlphaGammaYield<compute_stage>::calculateDirection(const ADReal & chi_v,
                                               const ADReal & chi_d,
@@ -282,8 +290,17 @@ LMAlphaGammaYield<compute_stage>::updateDissipativeStress(const ADReal & gamma_v
   chi_d = _chi_d_tr - 3.0 * _G * gamma_d * _dt;
 
   // Update yield parameters
+  updateYieldParameters(gamma_v);
+}
+
+template <ComputeStage compute_stage>
+void
+LMAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gamma_v)
+{
   ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
   _pcr = _pcr_tr * std::exp(_L * gamma_v * _dt);
   _A = (1.0 - _gamma) * pressure + 0.5 * _gamma * _pcr;
   _B = _M * ((1.0 - _alpha) * pressure + 0.5 * _alpha * _gamma * _pcr);
 }
+
+adBaseClass(LMAlphaGammaYield);

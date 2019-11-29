@@ -15,6 +15,19 @@
 
 #include "LMTwoVarUpdate.h"
 
+#define usingAlphaGammaYieldMembers                                                                \
+  usingTwoVarUpdateMembers;                                                                        \
+  using LMAlphaGammaYield<compute_stage>::_pressure_tr;                                            \
+  using LMAlphaGammaYield<compute_stage>::_eqv_stress_tr;                                          \
+  using LMAlphaGammaYield<compute_stage>::_pcr_tr;                                                 \
+  using LMAlphaGammaYield<compute_stage>::_pcr;                                                    \
+  using LMAlphaGammaYield<compute_stage>::_M;                                                      \
+  using LMAlphaGammaYield<compute_stage>::_L;                                                      \
+  using LMAlphaGammaYield<compute_stage>::_alpha;                                                  \
+  using LMAlphaGammaYield<compute_stage>::_gamma;                                                  \
+  using LMAlphaGammaYield<compute_stage>::_A;                                                      \
+  using LMAlphaGammaYield<compute_stage>::_B;
+
 template <ComputeStage>
 class LMAlphaGammaYield;
 
@@ -55,12 +68,14 @@ protected:
                                          const ADReal & chi_d,
                                          ADReal & dchi_v0,
                                          ADReal & dchi_d0);
+  virtual void updateYieldParametersDerivV(ADReal & dA, ADReal & dB);
   virtual ADReal
   calculateDirection(const ADReal & chi_v, const ADReal & chi_d, ADReal & ev, ADReal & ed);
   virtual void updateDissipativeStress(const ADReal & gamma_v,
                                        const ADReal & gamma_d,
                                        ADReal & chi_v,
                                        ADReal & chi_d);
+  virtual void updateYieldParameters(const ADReal & gamma_v);
 
   const Real _phi;
   const Real _pcr0;

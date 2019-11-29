@@ -15,6 +15,15 @@
 
 #include "ADMaterial.h"
 
+#define usingMechMaterialMembers                                                                   \
+  usingMaterialMembers;                                                                            \
+  using LMMechMaterial<compute_stage>::_strain_increment;                                          \
+  using LMMechMaterial<compute_stage>::_elastic_strain_incr;                                       \
+  using LMMechMaterial<compute_stage>::_stress_old;                                                \
+  using LMMechMaterial<compute_stage>::_stress;                                                    \
+  using LMMechMaterial<compute_stage>::_Cijkl;                                                     \
+  using LMMechMaterial<compute_stage>::spinRotation;              
+
 template <ComputeStage>
 class LMMechMaterial;
 template <typename>
@@ -44,6 +53,7 @@ protected:
                                      const RankTwoTensor & grad_tensor_old);
   virtual void computeQpElasticityTensor();
   virtual void computeQpStress();
+  virtual void computeQpElasticGuess();
   virtual ADRankTwoTensor spinRotation(const ADRankTwoTensor & tensor);
 
   // Coupled variables
@@ -76,7 +86,7 @@ protected:
 
   // Initial stresses
   std::vector<const Function *> _initial_stress;
-  
+
   // Viscoplastic model
   LMViscoPlasticUpdate<compute_stage> * _vp_model;
 

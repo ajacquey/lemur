@@ -219,8 +219,7 @@ void
 LMMechMaterial<compute_stage>::computeQpStress()
 {
   // Elastic guess
-  _elastic_strain_incr[_qp] = _strain_increment[_qp];
-  _stress[_qp] = spinRotation(_stress_old[_qp]) + _Cijkl * _strain_increment[_qp];
+  computeQpElasticGuess();
 
   // Viscoplastic correction
   if (_has_vp)
@@ -231,9 +230,19 @@ LMMechMaterial<compute_stage>::computeQpStress()
 }
 
 template <ComputeStage compute_stage>
+void
+LMMechMaterial<compute_stage>::computeQpElasticGuess()
+{
+  _elastic_strain_incr[_qp] = _strain_increment[_qp];
+  _stress[_qp] = spinRotation(_stress_old[_qp]) + _Cijkl * _strain_increment[_qp];
+}
+
+template <ComputeStage compute_stage>
 ADRankTwoTensor
 LMMechMaterial<compute_stage>::spinRotation(const ADRankTwoTensor & tensor)
 {
   return tensor + _spin_increment[_qp] * tensor.deviatoric() -
          tensor.deviatoric() * _spin_increment[_qp];
 }
+
+adBaseClass(LMMechMaterial);
