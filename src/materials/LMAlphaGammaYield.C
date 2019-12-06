@@ -42,7 +42,7 @@ LMAlphaGammaYield<compute_stage>::LMAlphaGammaYield(const InputParameters & para
     _alpha(getParam<Real>("alpha")),
     _gamma(getParam<Real>("gamma")),
     _L(getParam<Real>("critical_pressure_hardening")),
-    _has_hardening(_L > 0.0),
+    _has_hardening(_L != 0.0),
     _intnl(_has_hardening ? &declareADProperty<Real>("volumetric_plastic_strain") : nullptr),
     _intnl_old(_has_hardening ? &getMaterialPropertyOld<Real>("volumetric_plastic_strain") : nullptr)
 {
@@ -65,7 +65,7 @@ LMAlphaGammaYield<compute_stage>::yieldFunction(const ADReal & gamma_v, const AD
   ADReal chi_v = 0.0, chi_d = 0.0;
   updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
 
-  return Utility::pow<2>(chi_v / _A) + Utility::pow<2>(chi_d / _B) - 1.0;
+  return Utility::pow<2>(chi_v * _one_on_A) + Utility::pow<2>(chi_d * _one_on_B) - 1.0;
 }
 
 template <ComputeStage compute_stage>
@@ -142,7 +142,7 @@ LMAlphaGammaYield<compute_stage>::preReturnMap()
   if (_has_hardening)
   { 
     (*_intnl)[_qp] = (*_intnl_old)[_qp];
-    _pcr_tr = _pcr0 * std::exp(-_L * (*_intnl_old)[_qp]);
+    _pcr_tr = _pcr0 * std::exp(_L * (*_intnl_old)[_qp]);
   }
 
   _chi_v_tr = _pressure_tr - 0.5 * _gamma * _pcr_tr;
@@ -181,7 +181,7 @@ LMAlphaGammaYield<compute_stage>::calculateProjection(const ADReal & chi_v,
   ADReal ev = 0.0, ed = 0.0;
   calculateDirection(chi_v, chi_d, ev, ed);
 
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
+  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev * _one_on_A) + Utility::pow<2>(ed * _one_on_B)));
 
   chi_v0 = rho_0 * ev;
   chi_d0 = rho_0 * ed;
@@ -202,29 +202,25 @@ LMAlphaGammaYield<compute_stage>::calculateProjectionDerivV(const ADReal & chi_v
   // Dissipative stress derivative
   ADReal dchi_v = -_K * _dt - 0.5 * _gamma * _pcr * _L * _dt;
 
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
+  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev * _one_on_A) + Utility::pow<2>(ed * _one_on_B)));
 
   ADReal dA = 0.0, dB = 0.0;
   updateYieldParametersDerivV(dA, dB);
 
   dchi_v0 = rho_0 / rho_tr *
-                (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
-                     Utility::pow<2>(ev) +
-                 1.0) *
-                Utility::pow<2>(ed) * dchi_v +
-            Utility::pow<3>(rho_0) *
-                (dA * Utility::pow<2>(ev) / Utility::pow<3>(_A) +
-                 dB * Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
-                ev;
+                (1.0 + Utility::pow<2>(rho_0) *
+                           (Utility::pow<2>(_one_on_B) - Utility::pow<2>(_one_on_A)) *
+                           Utility::pow<2>(ev)) *
+                Utility::pow<2>(ed) * dchi_v -
+            Utility::pow<3>(rho_0) * ev *
+                (_one_on_A * Utility::pow<2>(ev) * dA + _one_on_B * Utility::pow<2>(ed * dB));
   dchi_d0 = rho_0 / rho_tr *
-                (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
-                     Utility::pow<2>(ed) -
-                 1.0) *
-                ev * ed * dchi_v +
-            Utility::pow<3>(rho_0) *
-                (dA * Utility::pow<2>(ev) / Utility::pow<3>(_A) +
-                 dB * Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
-                ed;
+                (-1.0 + Utility::pow<2>(rho_0) *
+                            (Utility::pow<2>(_one_on_B) - Utility::pow<2>(_one_on_A)) *
+                            Utility::pow<2>(ed)) *
+                ev * ed * dchi_v -
+            Utility::pow<3>(rho_0) * ed *
+                (_one_on_A * Utility::pow<2>(ev) * dA + _one_on_B * Utility::pow<2>(ed * dB));
 }
 
 template <ComputeStage compute_stage>
@@ -240,26 +236,27 @@ LMAlphaGammaYield<compute_stage>::calculateProjectionDerivD(const ADReal & chi_v
   // Dissipative stress derivative
   ADReal dchi_d = -3.0 * _G * _dt;
 
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
+  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev * _one_on_A) + Utility::pow<2>(ed * _one_on_B)));
 
-  dchi_v0 = rho_0 / rho_tr *
-            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_A) - 1.0 / Utility::pow<2>(_B)) *
-                 Utility::pow<2>(ev) -
-             1.0) *
-            ev * ed * dchi_d;
-  dchi_d0 = rho_0 / rho_tr *
-            (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_A) - 1.0 / Utility::pow<2>(_B)) *
-                 Utility::pow<2>(ed) +
-             1.0) *
-            Utility::pow<2>(ev) * dchi_d;
+  dchi_v0 =
+      rho_0 / rho_tr *
+      (-1.0 + Utility::pow<2>(rho_0) * (Utility::pow<2>(_one_on_A) - Utility::pow<2>(_one_on_B)) *
+                  Utility::pow<2>(ev)) *
+      ev * ed * dchi_d;
+  dchi_d0 =
+      rho_0 / rho_tr *
+      (1.0 + Utility::pow<2>(rho_0) * (Utility::pow<2>(_one_on_A) - Utility::pow<2>(_one_on_B)) *
+                 Utility::pow<2>(ed)) *
+      Utility::pow<2>(ev) * dchi_d;
 }
 
 template <ComputeStage compute_stage>
 void
 LMAlphaGammaYield<compute_stage>::updateYieldParametersDerivV(ADReal & dA, ADReal & dB)
 {
-  dA = -(1.0 - _gamma) * _K * _dt + 0.5 * _gamma * _L * _dt * _pcr;
-  dB = _M * (-(1.0 - _alpha) * _K * _dt + 0.5 * _alpha * _gamma * _L * _dt * _pcr);
+  dA = Utility::pow<2>(_one_on_A) * ((1.0 - _gamma) * _K * _dt - 0.5 * _gamma * _L * _dt * _pcr);
+  dB = Utility::pow<2>(_one_on_B) * _M *
+       ((1.0 - _alpha) * _K * _dt - 0.5 * _alpha * _gamma * _L * _dt * _pcr);
 }
 
 template <ComputeStage compute_stage>
@@ -299,8 +296,8 @@ LMAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gamma_v)
 {
   ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
   _pcr = _pcr_tr * std::exp(_L * gamma_v * _dt);
-  _A = (1.0 - _gamma) * pressure + 0.5 * _gamma * _pcr;
-  _B = _M * ((1.0 - _alpha) * pressure + 0.5 * _alpha * _gamma * _pcr);
+  _one_on_A = 1.0 / ((1.0 - _gamma) * pressure + 0.5 * _gamma * _pcr);
+  _one_on_B = 1.0 / (_M * ((1.0 - _alpha) * pressure + 0.5 * _alpha * _gamma * _pcr));
 }
 
 adBaseClass(LMAlphaGammaYield);

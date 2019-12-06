@@ -39,9 +39,15 @@ protected:
   //                                        ADReal & dchi_d0);
   virtual void updateYieldParameters(const ADReal & gamma_v) override;
   virtual void updateYieldParametersDerivV(ADReal & dA, ADReal & dB) override;
+  virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) override;
 
   // Coupled variables
   const ADVariableValue & _damage;
+  // Damage viscosity
+  const Real _eta_a;
+
+  // Properties
+  ADMaterialProperty(Real) & _damage_rate;
 
   usingAlphaGammaYieldMembers;
 };

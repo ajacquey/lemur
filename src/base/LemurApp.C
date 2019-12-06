@@ -18,6 +18,13 @@ LemurApp::LemurApp(InputParameters parameters) : MooseApp(parameters)
 
 LemurApp::~LemurApp() {}
 
+static void
+associateSyntaxInner(Syntax & syntax, ActionFactory & /*action_factory*/)
+{
+  registerSyntax("EmptyAction", "BCs/LMPressure");
+  registerSyntax("LMPressureAction", "BCs/LMPressure/*");
+}
+
 void
 LemurApp::registerAll(Factory & f, ActionFactory & af, Syntax & s)
 {
@@ -26,6 +33,7 @@ LemurApp::registerAll(Factory & f, ActionFactory & af, Syntax & s)
   Registry::registerActionsTo(af, {"LemurApp"});
 
   /* register custom execute flags, action syntax, etc. here */
+  associateSyntaxInner(s, af);
 }
 
 void

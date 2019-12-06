@@ -22,13 +22,21 @@ defineADValidParams(
     // Coupled variables
     params.addRequiredCoupledVar(
         "damage",
-        "The damage variable."););
+        "The damage variable.");
+    // Damage viscosity
+    params.addRequiredRangeCheckedParam<Real>("damage_viscosity",
+                                              "damage_viscosity > 0.0",
+                                              "The damage viscosity."););
 
 template <ComputeStage compute_stage>
 LMDamageAlphaGammaYield<compute_stage>::LMDamageAlphaGammaYield(const InputParameters & parameters)
   : LMAlphaGammaYield<compute_stage>(parameters),
     // Coupled variables
-    _damage(adCoupledValue("damage"))
+    _damage(adCoupledValue("damage")),
+    // Damage viscosity
+    _eta_a(getParam<Real>("damage_viscosity")),
+    // Properties
+    _damage_rate(declareADProperty<Real>("damage_rate"))
 {
 }
 
@@ -39,6 +47,9 @@ LMDamageAlphaGammaYield<compute_stage>::preReturnMap()
   // Damage correction
   _K *= (1.0 - _damage[_qp]);
   _G *= (1.0 - _damage[_qp]);
+
+  // Damage driving
+  _damage_rate[_qp] = 0.0;
 
   LMAlphaGammaYield<compute_stage>::preReturnMap();
 }
@@ -120,14 +131,34 @@ LMDamageAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gam
 {
   ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
   _pcr = _pcr_tr * std::exp(_L * gamma_v * _dt);
-  _A = (1.0 - _gamma) / (1.0 - _damage[_qp]) * pressure + 0.5 * _gamma * _pcr;
-  _B = _M * (pressure - _alpha * std::sqrt(1.0 - _damage[_qp]) * (pressure - 0.5 * _gamma * _pcr));
+  _one_on_A = (1.0 - _damage[_qp]) / ((1.0 + _gamma) * pressure + 0.5 * (1.0 - _damage[_qp]) * _gamma * _pcr);
+  _one_on_B = 1.0 / (_M * (pressure - _alpha * std::sqrt(1.0 - _damage[_qp]) * (pressure - 0.5 * _gamma * _pcr)));
 }
 
 template <ComputeStage compute_stage>
 void
 LMDamageAlphaGammaYield<compute_stage>::updateYieldParametersDerivV(ADReal & dA, ADReal & dB)
 {
-  dA = -(1.0 - _gamma) * _K * _dt + 0.5 * _gamma * _L * _dt * _pcr;
-  dB = _M * (-_K * _dt + _alpha * std::sqrt(1.0 - _damage[_qp]) * (_K * _dt + 0.5 * _gamma * _L * _dt));
+  dA = (_damage[_qp] != 1.0)
+           ? Utility::pow<2>(_one_on_A) *
+                 ((1.0 - _gamma) / (1.0 - _damage[_qp]) * _K * _dt - 0.5 * _gamma * _L * _dt * _pcr)
+           : 0.0;
+  dB = Utility::pow<2>(_one_on_B) * _M *
+       ((1.0 - _alpha * std::sqrt(1.0 - _damage[_qp])) * _K * _dt -
+        0.5 * std::sqrt(1.0 - _damage[_qp]) * _alpha * _gamma * _L * _dt * _pcr);
+}
+
+template <ComputeStage compute_stage>
+void
+LMDamageAlphaGammaYield<compute_stage>::postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d)
+{
+  LMAlphaGammaYield<compute_stage>::postReturnMap(gamma_v, gamma_d);
+
+  ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
+  ADReal eqv_stress = _eqv_stress_tr - 3.0 * _G * gamma_d * _dt;
+  // Damage driving force
+  ADReal Ya = 0.5 / (1.0 - _damage[_qp]) * (Utility::pow<2>(pressure) / _K + Utility::pow<2>(eqv_stress) / (3.0 * _G));
+  _damage_rate[_qp] =
+      _eta_p / _eta_a *
+      std::sqrt(Utility::pow<2>(gamma_v / _one_on_A) + Utility::pow<2>(gamma_d / _one_on_B)) / Ya;
 }

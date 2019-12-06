@@ -25,8 +25,8 @@
   using LMAlphaGammaYield<compute_stage>::_L;                                                      \
   using LMAlphaGammaYield<compute_stage>::_alpha;                                                  \
   using LMAlphaGammaYield<compute_stage>::_gamma;                                                  \
-  using LMAlphaGammaYield<compute_stage>::_A;                                                      \
-  using LMAlphaGammaYield<compute_stage>::_B;
+  using LMAlphaGammaYield<compute_stage>::_one_on_A;                                               \
+  using LMAlphaGammaYield<compute_stage>::_one_on_B;
 
 template <ComputeStage>
 class LMAlphaGammaYield;
@@ -91,8 +91,8 @@ protected:
   ADReal _eqv_stress_tr;
 
   ADReal _pcr_tr;
-  ADReal _A;
-  ADReal _B;
+  ADReal _one_on_A;
+  ADReal _one_on_B;
 
   ADReal _chi_v_tr;
   ADReal _chi_d_tr;
