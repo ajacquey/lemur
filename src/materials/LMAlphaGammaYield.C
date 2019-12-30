@@ -59,12 +59,8 @@ LMAlphaGammaYield<compute_stage>::initQpStatefulProperties()
 
 template <ComputeStage compute_stage>
 ADReal
-LMAlphaGammaYield<compute_stage>::yieldFunction(const ADReal & gamma_v, const ADReal & gamma_d)
+LMAlphaGammaYield<compute_stage>::yieldFunction(const ADReal & chi_v, const ADReal & chi_d)
 {
-
-  ADReal chi_v = 0.0, chi_d = 0.0;
-  updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
-
   return Utility::pow<2>(chi_v * _one_on_A) + Utility::pow<2>(chi_d * _one_on_B) - 1.0;
 }
 
@@ -75,14 +71,16 @@ LMAlphaGammaYield<compute_stage>::overStress(const ADReal & gamma_v,
                                       ADReal & over_v,
                                       ADReal & over_d)
 {
+  // Dissipative stresses
   ADReal chi_v = 0.0, chi_d = 0.0;
   updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
 
-  ADReal chi_v0 = 0.0, chi_d0 = 0.0;
-  calculateProjection(chi_v, chi_d, chi_v0, chi_d0);
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
 
-  over_v = chi_v - chi_v0;
-  over_d = chi_d - chi_d0;
+  over_v = f * df_dchi_v;
+  over_d = f * df_dchi_d;
 }
 
 template <ComputeStage compute_stage>
@@ -98,14 +96,36 @@ LMAlphaGammaYield<compute_stage>::overStressDerivV(const ADReal & gamma_v,
 
   // Dissipative stress derivatives
   ADReal dchi_v = -_K * _dt - 0.5 * _gamma * _pcr * _L * _dt;
-  ADReal dchi_d = 0.0;
 
-  // Derivative of the projection
-  ADReal dchi_v0 = 0.0, dchi_d0 = 0.0;
-  calculateProjectionDerivV(chi_v, chi_d, dchi_v0, dchi_d0);
+  // Yield and derivatives
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
+  ADReal d2f_dchi_v2 = d2yieldFunctiondVol2(chi_v, chi_d);
+  ADReal d2f_dchi_d_dchi_v = d2yieldFunctiondDevVol(chi_v, chi_d);
+  ADReal df_dA = dyieldFunctiondA(chi_v, chi_d);
+  ADReal df_dB = dyieldFunctiondA(chi_v, chi_d);
+  ADReal d2f_dchi_v_dA = d2yieldFunctiondVolA(chi_v, chi_d);
+  ADReal d2f_dchi_v_dB = d2yieldFunctiondVolB(chi_v, chi_d);
+  ADReal d2f_dchi_d_dA = d2yieldFunctiondDevA(chi_v, chi_d);
+  ADReal d2f_dchi_d_dB = d2yieldFunctiondDevA(chi_v, chi_d);
 
-  over_v_v = dchi_v - dchi_v0;
-  over_d_v = dchi_d - dchi_d0;
+  // Yield parameters derivatives
+  ADReal dA = 0.0, dB = 0.0;
+  updateYieldParametersDerivV(dA, dB);
+
+  // Over stress derivatives wrt dissipative stress
+  ADReal over_v_dchi_v = Utility::pow<2>(df_dchi_v) + f * d2f_dchi_v2;
+  ADReal over_d_dchi_v = df_dchi_v * df_dchi_d + f * d2f_dchi_d_dchi_v;
+
+  // Over stress derivatives wrt yield parameters
+  ADReal over_v_dA = df_dA * df_dchi_v + f * d2f_dchi_v_dA;
+  ADReal over_v_dB = df_dB * df_dchi_v + f * d2f_dchi_v_dB;
+  ADReal over_d_dA = df_dA * df_dchi_d + f * d2f_dchi_d_dA;
+  ADReal over_d_dB = df_dB * df_dchi_d + f * d2f_dchi_d_dB;
+
+  over_v_v = over_v_dchi_v * dchi_v + over_v_dA * dA + over_v_dB * dB;
+  over_d_v = over_d_dchi_v * dchi_v + over_d_dA * dA + over_d_dB * dB;
 }
 
 template <ComputeStage compute_stage>
@@ -115,20 +135,26 @@ LMAlphaGammaYield<compute_stage>::overStressDerivD(const ADReal & gamma_v,
                                             ADReal & over_v_d,
                                             ADReal & over_d_d)
 {
-  // Dissipative stresses
+    // Dissipative stresses
   ADReal chi_v = 0.0, chi_d = 0.0;
   updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
 
   // Dissipative stress derivatives
-  ADReal dchi_v = 0.0;
   ADReal dchi_d = -3.0 * _G * _dt;
 
-  // Derivative of the projection
-  ADReal dchi_v0 = 0.0, dchi_d0 = 0.0;
-  calculateProjectionDerivD(chi_v, chi_d, dchi_v0, dchi_d0);
+  // Yield and derivatives
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
+  ADReal d2f_dchi_v_dchi_d = d2yieldFunctiondVolDev(chi_v, chi_d);
+  ADReal d2f_dchi_d2 = d2yieldFunctiondDev2(chi_v, chi_d);
 
-  over_v_d = dchi_v - dchi_v0;
-  over_d_d = dchi_d - dchi_d0;
+  // Over stress derivatives wrt dissipative stress
+  ADReal over_v_dchi_d = df_dchi_v * df_dchi_d + f * d2f_dchi_v_dchi_d;
+  ADReal over_d_dchi_d = Utility::pow<2>(df_dchi_d) + f * d2f_dchi_d2;
+
+  over_v_d = over_v_dchi_d * dchi_d;
+  over_d_d = over_d_dchi_d * dchi_d;
 }
 
 template <ComputeStage compute_stage>
@@ -171,106 +197,12 @@ LMAlphaGammaYield<compute_stage>::reformPlasticStrainTensor(const ADReal & gamma
 }
 
 template <ComputeStage compute_stage>
-ADReal
-LMAlphaGammaYield<compute_stage>::calculateProjection(const ADReal & chi_v,
-                                               const ADReal & chi_d,
-                                               ADReal & chi_v0,
-                                               ADReal & chi_d0)
-{
-  // Directions
-  ADReal ev = 0.0, ed = 0.0;
-  calculateDirection(chi_v, chi_d, ev, ed);
-
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev * _one_on_A) + Utility::pow<2>(ed * _one_on_B)));
-
-  chi_v0 = rho_0 * ev;
-  chi_d0 = rho_0 * ed;
-
-  return rho_0;
-}
-
-template <ComputeStage compute_stage>
-void
-LMAlphaGammaYield<compute_stage>::calculateProjectionDerivV(const ADReal & chi_v,
-                                                     const ADReal & chi_d,
-                                                     ADReal & dchi_v0,
-                                                     ADReal & dchi_d0)
-{
-  // Directions
-  ADReal ev = 0.0, ed = 0.0;
-  ADReal rho_tr = calculateDirection(chi_v, chi_d, ev, ed);
-  // Dissipative stress derivative
-  ADReal dchi_v = -_K * _dt - 0.5 * _gamma * _pcr * _L * _dt;
-
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev * _one_on_A) + Utility::pow<2>(ed * _one_on_B)));
-
-  ADReal dA = 0.0, dB = 0.0;
-  updateYieldParametersDerivV(dA, dB);
-
-  dchi_v0 = rho_0 / rho_tr *
-                (1.0 + Utility::pow<2>(rho_0) *
-                           (Utility::pow<2>(_one_on_B) - Utility::pow<2>(_one_on_A)) *
-                           Utility::pow<2>(ev)) *
-                Utility::pow<2>(ed) * dchi_v -
-            Utility::pow<3>(rho_0) * ev *
-                (_one_on_A * Utility::pow<2>(ev) * dA + _one_on_B * Utility::pow<2>(ed * dB));
-  dchi_d0 = rho_0 / rho_tr *
-                (-1.0 + Utility::pow<2>(rho_0) *
-                            (Utility::pow<2>(_one_on_B) - Utility::pow<2>(_one_on_A)) *
-                            Utility::pow<2>(ed)) *
-                ev * ed * dchi_v -
-            Utility::pow<3>(rho_0) * ed *
-                (_one_on_A * Utility::pow<2>(ev) * dA + _one_on_B * Utility::pow<2>(ed * dB));
-}
-
-template <ComputeStage compute_stage>
-void
-LMAlphaGammaYield<compute_stage>::calculateProjectionDerivD(const ADReal & chi_v,
-                                                     const ADReal & chi_d,
-                                                     ADReal & dchi_v0,
-                                                     ADReal & dchi_d0)
-{
-  // Directions
-  ADReal ev = 0.0, ed = 0.0;
-  ADReal rho_tr = calculateDirection(chi_v, chi_d, ev, ed);
-  // Dissipative stress derivative
-  ADReal dchi_d = -3.0 * _G * _dt;
-
-  ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev * _one_on_A) + Utility::pow<2>(ed * _one_on_B)));
-
-  dchi_v0 =
-      rho_0 / rho_tr *
-      (-1.0 + Utility::pow<2>(rho_0) * (Utility::pow<2>(_one_on_A) - Utility::pow<2>(_one_on_B)) *
-                  Utility::pow<2>(ev)) *
-      ev * ed * dchi_d;
-  dchi_d0 =
-      rho_0 / rho_tr *
-      (1.0 + Utility::pow<2>(rho_0) * (Utility::pow<2>(_one_on_A) - Utility::pow<2>(_one_on_B)) *
-                 Utility::pow<2>(ed)) *
-      Utility::pow<2>(ev) * dchi_d;
-}
-
-template <ComputeStage compute_stage>
 void
 LMAlphaGammaYield<compute_stage>::updateYieldParametersDerivV(ADReal & dA, ADReal & dB)
 {
   dA = Utility::pow<2>(_one_on_A) * ((1.0 - _gamma) * _K * _dt - 0.5 * _gamma * _L * _dt * _pcr);
   dB = Utility::pow<2>(_one_on_B) * _M *
        ((1.0 - _alpha) * _K * _dt - 0.5 * _alpha * _gamma * _L * _dt * _pcr);
-}
-
-template <ComputeStage compute_stage>
-ADReal
-LMAlphaGammaYield<compute_stage>::calculateDirection(const ADReal & chi_v,
-                                              const ADReal & chi_d,
-                                              ADReal & ev,
-                                              ADReal & ed)
-{
-  ADReal rho_tr = std::sqrt(Utility::pow<2>(chi_v) + Utility::pow<2>(chi_d));
-  ev = (rho_tr != 0.0) ? chi_v / rho_tr : 0.0;
-  ed = (rho_tr != 0.0) ? chi_d / rho_tr : 0.0;
-
-  return rho_tr;
 }
 
 template <ComputeStage compute_stage>
@@ -300,4 +232,110 @@ LMAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gamma_v)
   _one_on_B = 1.0 / (_M * ((1.0 - _alpha) * pressure + 0.5 * _alpha * _gamma * _pcr));
 }
 
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::dyieldFunctiondVol(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  return Utility::pow<2>(_one_on_A) * chi_v / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::dyieldFunctiondDev(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  return Utility::pow<2>(_one_on_B) * chi_d / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondVol2(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  return (Utility::pow<2>(_one_on_A) * - Utility::pow<2>(df_dchi_v)) / (1.0 + f);
+}
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondVolDev(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
+  return -df_dchi_v * df_dchi_d / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondDevVol(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
+  return -df_dchi_v * df_dchi_d / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondDev2(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
+  return (Utility::pow<2>(_one_on_B) * - Utility::pow<2>(df_dchi_d)) / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::dyieldFunctiondA(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  return Utility::pow<2>(chi_v) * _one_on_A / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::dyieldFunctiondB(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  return Utility::pow<2>(chi_d) * _one_on_B / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondVolA(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dA = dyieldFunctiondA(chi_v, chi_d);
+  return _one_on_A * chi_v / (1.0 + f) * (2.0 - _one_on_A / (1.0 + f) * df_dA);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondVolB(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
+  ADReal df_dB = dyieldFunctiondB(chi_v, chi_d);
+  return -df_dchi_v * df_dB / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondDevA(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
+  ADReal df_dA = dyieldFunctiondA(chi_v, chi_d);
+  return -df_dchi_d * df_dA / (1.0 + f);
+}
+
+template <ComputeStage compute_stage>
+ADReal
+LMAlphaGammaYield<compute_stage>::d2yieldFunctiondDevB(const ADReal & chi_v, const ADReal & chi_d)
+{
+  ADReal f = yieldFunction(chi_v, chi_d);
+  ADReal df_dB = dyieldFunctiondB(chi_v, chi_d);
+  return _one_on_B * chi_d / (1.0 + f) * (2.0 - _one_on_B / (1.0 + f) * df_dB);
+}
 adBaseClass(LMAlphaGammaYield);

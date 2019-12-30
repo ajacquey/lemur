@@ -46,7 +46,7 @@ protected:
                         ADReal & jacdd,
                         ADReal & jacvd,
                         ADReal & jacdv);
-  virtual ADReal yieldFunction(const ADReal & gamma_v, const ADReal & gamma_d) = 0;
+  virtual ADReal yieldFunction(const ADReal & chi_v, const ADReal & chi_d) = 0;
   virtual void
   overStress(const ADReal & gamma_v, const ADReal & gamma_d, ADReal & over_v, ADReal & over_d) = 0;
   virtual void overStressDerivV(const ADReal & gamma_v,
@@ -61,6 +61,10 @@ protected:
                                                     const ADReal & gamma_d) = 0;
   virtual void preReturnMap() = 0;
   virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) = 0;
+  virtual void updateDissipativeStress(const ADReal & gamma_v,
+                                       const ADReal & gamma_d,
+                                       ADReal & chi_v,
+                                       ADReal & chi_d) = 0;
 
   ADRankTwoTensor _stress_tr;
   ADReal _K;

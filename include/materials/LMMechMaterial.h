@@ -22,7 +22,7 @@
   using LMMechMaterial<compute_stage>::_stress_old;                                                \
   using LMMechMaterial<compute_stage>::_stress;                                                    \
   using LMMechMaterial<compute_stage>::_Cijkl;                                                     \
-  using LMMechMaterial<compute_stage>::spinRotation;              
+  using LMMechMaterial<compute_stage>::spinRotation              
 
 template <ComputeStage>
 class LMMechMaterial;

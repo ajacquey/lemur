@@ -54,77 +54,6 @@ LMDamageAlphaGammaYield<compute_stage>::preReturnMap()
   LMAlphaGammaYield<compute_stage>::preReturnMap();
 }
 
-// template <ComputeStage compute_stage>
-// void
-// LMDamageAlphaGammaYield<compute_stage>::postReturnMap(const ADReal & gamma_v, const ADReal & /*gamma_d*/)
-// {
-//   if (_has_hardening)
-//     (*_intnl)[_qp] = (*_intnl_old)[_qp] + gamma_v * _dt;
-// }
-
-
-// template <ComputeStage compute_stage>
-// void
-// LMDamageAlphaGammaYield<compute_stage>::calculateProjectionDerivV(const ADReal & chi_v,
-//                                                      const ADReal & chi_d,
-//                                                      ADReal & dchi_v0,
-//                                                      ADReal & dchi_d0)
-// {
-//   // Directions
-//   ADReal ev = 0.0, ed = 0.0;
-//   ADReal rho_tr = calculateDirection(chi_v, chi_d, ev, ed);
-//   // Dissipative stress derivative
-//   ADReal dchi_v = -_K * _dt - 0.5 * _gamma * _pcr * _L * _dt;
-
-//   ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
-
-//   dchi_v0 =
-//       rho_0 / rho_tr *
-//           (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
-//                Utility::pow<2>(ev) +
-//            1.0) *
-//           Utility::pow<2>(ed) * dchi_v +
-//       Utility::pow<3>(rho_0) *
-//           (Utility::pow<2>(ev) / Utility::pow<3>(_A) + Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
-//           ev;
-//   dchi_d0 =
-//       rho_0 / rho_tr *
-//           (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_B) - 1.0 / Utility::pow<2>(_A)) *
-//                Utility::pow<2>(ed) -
-//            1.0) *
-//           ev * ed * dchi_v +
-//       Utility::pow<3>(rho_0) *
-//           (Utility::pow<2>(ev) / Utility::pow<3>(_A) + Utility::pow<2>(ed) / Utility::pow<3>(_B)) *
-//           ed;
-// }
-
-// template <ComputeStage compute_stage>
-// void
-// LMDamageAlphaGammaYield<compute_stage>::calculateProjectionDerivD(const ADReal & chi_v,
-//                                                      const ADReal & chi_d,
-//                                                      ADReal & dchi_v0,
-//                                                      ADReal & dchi_d0)
-// {
-//   // Directions
-//   ADReal ev = 0.0, ed = 0.0;
-//   ADReal rho_tr = calculateDirection(chi_v, chi_d, ev, ed);
-//   // Dissipative stress derivative
-//   ADReal dchi_d = -3.0 * _G * _dt;
-
-//   ADReal rho_0 = std::sqrt(1.0 / (Utility::pow<2>(ev / _A) + Utility::pow<2>(ed / _B)));
-
-//   dchi_v0 = rho_0 / rho_tr *
-//             (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_A) - 1.0 / Utility::pow<2>(_B)) *
-//                  Utility::pow<2>(ev) -
-//              1.0) *
-//             ev * ed * dchi_d;
-//   dchi_d0 = rho_0 / rho_tr *
-//             (Utility::pow<2>(rho_0) * (1.0 / Utility::pow<2>(_A) - 1.0 / Utility::pow<2>(_B)) *
-//                  Utility::pow<2>(ed) +
-//              1.0) *
-//             Utility::pow<2>(ev) * dchi_d;
-// }
-
 template <ComputeStage compute_stage>
 void
 LMDamageAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gamma_v)
@@ -158,7 +87,5 @@ LMDamageAlphaGammaYield<compute_stage>::postReturnMap(const ADReal & gamma_v, co
   ADReal eqv_stress = _eqv_stress_tr - 3.0 * _G * gamma_d * _dt;
   // Damage driving force
   ADReal Ya = 0.5 / (1.0 - _damage[_qp]) * (Utility::pow<2>(pressure) / _K + Utility::pow<2>(eqv_stress) / (3.0 * _G));
-  _damage_rate[_qp] =
-      _eta_p / _eta_a *
-      std::sqrt(Utility::pow<2>(gamma_v / _one_on_A) + Utility::pow<2>(gamma_d / _one_on_B)) / Ya;
+  _damage_rate[_qp] = _yield_function[_qp] / (_eta_a * Ya);
 }

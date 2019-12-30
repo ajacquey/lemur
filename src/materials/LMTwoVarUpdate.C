@@ -55,7 +55,9 @@ LMTwoVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
   preReturnMap();
 
   // Check yield function
-  _yield_function[_qp] = yieldFunction(0.0, 0.0);
+  ADReal chi_v = 0.0, chi_d = 0.0;
+  updateDissipativeStress(0.0, 0.0, chi_v, chi_d);
+  _yield_function[_qp] = yieldFunction(chi_v, chi_d);
   if (_yield_function[_qp] <= _abs_tol) // Elastic
     return;
 
@@ -64,7 +66,8 @@ LMTwoVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
   returnMap(gamma_v, gamma_d);
 
   // Update quantities
-  _yield_function[_qp] = yieldFunction(gamma_v, gamma_d);
+  updateDissipativeStress(gamma_v, gamma_d, chi_v, chi_d);
+  _yield_function[_qp] = yieldFunction(chi_v, chi_d);
   _plastic_strain_incr[_qp] = reformPlasticStrainTensor(gamma_v, gamma_d);
   elastic_strain_incr -= _plastic_strain_incr[_qp];
   stress -= Cijkl * _plastic_strain_incr[_qp];
@@ -128,10 +131,12 @@ LMTwoVarUpdate<compute_stage>::residual(const ADReal & gamma_v,
                                         ADReal & resd)
 {
   overStress(gamma_v, gamma_d, resv, resd);
-  if (gamma_v != 0.0)
-    resv -= _eta_p * std::pow(gamma_v, 1.0 / _n);
-  if (gamma_d != 0.0)
-    resd -= _eta_p * std::pow(gamma_d, 1.0 / _n);
+  // if (gamma_v != 0.0)
+  //   resv -= _eta_p * std::pow(gamma_v, 1.0 / _n);
+  // if (gamma_d != 0.0)
+  //   resd -= _eta_p * std::pow(gamma_d, 1.0 / _n);
+  resv -= _eta_p * gamma_v;
+  resd -= _eta_p * gamma_d;
 }
 
 template <ComputeStage compute_stage>
@@ -145,10 +150,12 @@ LMTwoVarUpdate<compute_stage>::jacobian(const ADReal & gamma_v,
 {
   overStressDerivV(gamma_v, gamma_d, jacvv, jacdv);
   overStressDerivD(gamma_v, gamma_d, jacvd, jacdd);
-  if (gamma_v != 0.0)
-    jacvv -= _eta_p / _n * std::pow(gamma_v, 1.0 / _n - 1.0);
-  if (gamma_d != 0.0)
-    jacdd -= _eta_p / _n * std::pow(gamma_d, 1.0 / _n - 1.0);
+  // if (gamma_v != 0.0)
+  //   jacvv -= _eta_p / _n * std::pow(gamma_v, 1.0 / _n - 1.0);
+  // if (gamma_d != 0.0)
+  //   jacdd -= _eta_p / _n * std::pow(gamma_d, 1.0 / _n - 1.0);
+  jacvv -= _eta_p;
+  jacdd -= _eta_p;
 }
 
 adBaseClass(LMTwoVarUpdate);

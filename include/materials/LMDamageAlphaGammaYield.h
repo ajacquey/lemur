@@ -28,15 +28,6 @@ public:
 
 protected:
   virtual void preReturnMap() override;
-  // virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) override;
-  // virtual void calculateProjectionDerivV(const ADReal & chi_v,
-  //                                        const ADReal & chi_d,
-  //                                        ADReal & dchi_v0,
-  //                                        ADReal & dchi_d0);
-  // virtual void calculateProjectionDerivD(const ADReal & chi_v,
-  //                                        const ADReal & chi_d,
-  //                                        ADReal & dchi_v0,
-  //                                        ADReal & dchi_d0);
   virtual void updateYieldParameters(const ADReal & gamma_v) override;
   virtual void updateYieldParametersDerivV(ADReal & dA, ADReal & dB) override;
   virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) override;

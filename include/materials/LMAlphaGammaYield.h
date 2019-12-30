@@ -26,7 +26,7 @@
   using LMAlphaGammaYield<compute_stage>::_alpha;                                                  \
   using LMAlphaGammaYield<compute_stage>::_gamma;                                                  \
   using LMAlphaGammaYield<compute_stage>::_one_on_A;                                               \
-  using LMAlphaGammaYield<compute_stage>::_one_on_B;
+  using LMAlphaGammaYield<compute_stage>::_one_on_B
 
 template <ComputeStage>
 class LMAlphaGammaYield;
@@ -58,24 +58,24 @@ protected:
   virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) override;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_v,
                                                     const ADReal & gamma_d) override;
-  virtual ADReal
-  calculateProjection(const ADReal & chi_v, const ADReal & chi_d, ADReal & chi_v0, ADReal & chi_d0);
-  virtual void calculateProjectionDerivV(const ADReal & chi_v,
-                                         const ADReal & chi_d,
-                                         ADReal & dchi_v0,
-                                         ADReal & dchi_d0);
-  virtual void calculateProjectionDerivD(const ADReal & chi_v,
-                                         const ADReal & chi_d,
-                                         ADReal & dchi_v0,
-                                         ADReal & dchi_d0);
   virtual void updateYieldParametersDerivV(ADReal & dA, ADReal & dB);
-  virtual ADReal
-  calculateDirection(const ADReal & chi_v, const ADReal & chi_d, ADReal & ev, ADReal & ed);
   virtual void updateDissipativeStress(const ADReal & gamma_v,
                                        const ADReal & gamma_d,
                                        ADReal & chi_v,
-                                       ADReal & chi_d);
+                                       ADReal & chi_d) override;
   virtual void updateYieldParameters(const ADReal & gamma_v);
+  virtual ADReal dyieldFunctiondVol(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal dyieldFunctiondDev(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondVol2(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondVolDev(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondDevVol(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondDev2(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal dyieldFunctiondA(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal dyieldFunctiondB(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondVolA(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondVolB(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondDevA(const ADReal & chi_v, const ADReal & chi_d);
+  virtual ADReal d2yieldFunctiondDevB(const ADReal & chi_v, const ADReal & chi_d);
 
   const Real _phi;
   const Real _pcr0;
