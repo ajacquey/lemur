@@ -131,10 +131,12 @@ LMTwoVarUpdate<compute_stage>::residual(const ADReal & gamma_v,
                                         ADReal & resd)
 {
   overStress(gamma_v, gamma_d, resv, resd);
-  if (gamma_v != 0.0)
-    resv -= _eta_p * std::pow(gamma_v, 1.0 / _n);
-  if (gamma_d != 0.0)
-    resd -= _eta_p * std::pow(gamma_d, 1.0 / _n);
+  resv -= _eta_p * gamma_v;
+  resd -= _eta_p * gamma_d;
+  // if (gamma_v != 0.0)
+  //   resv -= _eta_p * std::pow(gamma_v, 1.0 / _n);
+  // if (gamma_d != 0.0)
+  //   resd -= _eta_p * std::pow(gamma_d, 1.0 / _n);
 }
 
 template <ComputeStage compute_stage>
@@ -148,10 +150,12 @@ LMTwoVarUpdate<compute_stage>::jacobian(const ADReal & gamma_v,
 {
   overStressDerivV(gamma_v, gamma_d, jacvv, jacdv);
   overStressDerivD(gamma_v, gamma_d, jacvd, jacdd);
-  if (gamma_v != 0.0)
-    jacvv -= _eta_p / _n * std::pow(gamma_v, 1.0 / _n - 1.0);
-  if (gamma_d != 0.0)
-    jacdd -= _eta_p / _n * std::pow(gamma_d, 1.0 / _n - 1.0);
+  jacvv -= _eta_p;
+  jacdd -= _eta_p; 
+  // if (gamma_v != 0.0)
+  //   jacvv -= _eta_p / _n * std::pow(gamma_v, 1.0 / _n - 1.0);
+  // if (gamma_d != 0.0)
+  //   jacdd -= _eta_p / _n * std::pow(gamma_d, 1.0 / _n - 1.0);
 }
 
 adBaseClass(LMTwoVarUpdate);

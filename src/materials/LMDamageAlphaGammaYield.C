@@ -60,7 +60,7 @@ LMDamageAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gam
 {
   ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
   _pcr = _pcr_tr * std::exp(_L * gamma_v * _dt);
-  _one_on_A = (1.0 - _damage[_qp]) / ((1.0 + _gamma) * pressure + 0.5 * (1.0 - _damage[_qp]) * _gamma * _pcr);
+  _one_on_A = (1.0 - _damage[_qp]) / ((1.0 - _gamma) * pressure + 0.5 * (1.0 - _damage[_qp]) * _gamma * _pcr);
   _one_on_B = 1.0 / (_M * (pressure - _alpha * std::sqrt(1.0 - _damage[_qp]) * (pressure - 0.5 * _gamma * _pcr)));
 }
 
