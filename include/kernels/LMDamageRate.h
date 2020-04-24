@@ -15,21 +15,14 @@
 
 #include "ADKernel.h"
 
-template <ComputeStage>
-class LMDamageRate;
-
-declareADValidParams(LMDamageRate);
-
-template <ComputeStage compute_stage>
-class LMDamageRate : public ADKernel<compute_stage>
+class LMDamageRate : public ADKernel
 {
 public:
+  static InputParameters validParams();
   LMDamageRate(const InputParameters & parameters);
 
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const ADMaterialProperty(Real) & _damage_rate;
-
-  usingKernelMembers;
+  const ADMaterialProperty<Real> & _damage_rate;
 };

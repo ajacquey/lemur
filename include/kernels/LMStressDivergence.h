@@ -15,19 +15,10 @@
 
 #include "ADKernel.h"
 
-template <ComputeStage>
-class LMStressDivergence;
-template <typename>
-class RankTwoTensorTempl;
-typedef RankTwoTensorTempl<Real> RankTwoTensor;
-typedef RankTwoTensorTempl<DualReal> DualRankTwoTensor;
-
-declareADValidParams(LMStressDivergence);
-
-template <ComputeStage compute_stage>
-class LMStressDivergence : public ADKernel<compute_stage>
+class LMStressDivergence : public ADKernel
 {
 public:
+  static InputParameters validParams();
   LMStressDivergence(const InputParameters & parameters);
 
 protected:
@@ -36,7 +27,5 @@ protected:
   const unsigned int _component;
   const Real _rho;
   const RealVectorValue _gravity;
-  const ADMaterialProperty(RankTwoTensor) & _stress;
-
-  usingKernelMembers;
+  const ADMaterialProperty<RankTwoTensor> & _stress;
 };

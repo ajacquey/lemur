@@ -15,21 +15,10 @@
 
 #include "LMViscoPlasticUpdate.h"
 
-#define usingSingleVarUpdateMembers                                                                \
-  usingViscoPlasticUpdateMembers;                                                                  \
-  using LMSingleVarUpdate<compute_stage>::_stress_tr;                                              \
-  using LMSingleVarUpdate<compute_stage>::_K;                                                      \
-  using LMSingleVarUpdate<compute_stage>::_G
-
-template <ComputeStage>
-class LMSingleVarUpdate;
-
-declareADValidParams(LMSingleVarUpdate);
-
-template <ComputeStage compute_stage>
-class LMSingleVarUpdate : public LMViscoPlasticUpdate<compute_stage>
+class LMSingleVarUpdate : public LMViscoPlasticUpdate
 {
 public:
+  static InputParameters validParams();
   LMSingleVarUpdate(const InputParameters & parameters);
   virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
                                   const RankFourTensor & Cijkl,
@@ -48,6 +37,4 @@ protected:
   ADRankTwoTensor _stress_tr;
   ADReal _K;
   ADReal _G;
-
-  usingViscoPlasticUpdateMembers;
 };

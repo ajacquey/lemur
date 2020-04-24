@@ -13,24 +13,24 @@
 
 #include "LMDamageAlphaGammaYield.h"
 
-registerADMooseObject("LemurApp", LMDamageAlphaGammaYield);
+registerMooseObject("LemurApp", LMDamageAlphaGammaYield);
 
-defineADValidParams(
-    LMDamageAlphaGammaYield,
-    LMAlphaGammaYield,
-    params.addClassDescription("Viscoplastic update based on the damaged alpha-gamma yield functions.");
-    // Coupled variables
-    params.addRequiredCoupledVar(
-        "damage",
-        "The damage variable.");
-    // Damage viscosity
-    params.addRequiredRangeCheckedParam<Real>("damage_viscosity",
-                                              "damage_viscosity > 0.0",
-                                              "The damage viscosity."););
+InputParameters
+LMDamageAlphaGammaYield::validParams()
+{
+  InputParameters params = LMAlphaGammaYield::validParams();
+  params.addClassDescription(
+      "Viscoplastic update based on the damaged alpha-gamma yield functions.");
+  // Coupled variables
+  params.addRequiredCoupledVar("damage", "The damage variable.");
+  // Damage viscosity
+  params.addRequiredRangeCheckedParam<Real>(
+      "damage_viscosity", "damage_viscosity > 0.0", "The damage viscosity.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMDamageAlphaGammaYield<compute_stage>::LMDamageAlphaGammaYield(const InputParameters & parameters)
-  : LMAlphaGammaYield<compute_stage>(parameters),
+LMDamageAlphaGammaYield::LMDamageAlphaGammaYield(const InputParameters & parameters)
+  : LMAlphaGammaYield(parameters),
     // Coupled variables
     _damage(adCoupledValue("damage")),
     // Damage viscosity
@@ -40,9 +40,8 @@ LMDamageAlphaGammaYield<compute_stage>::LMDamageAlphaGammaYield(const InputParam
 {
 }
 
-template <ComputeStage compute_stage>
 void
-LMDamageAlphaGammaYield<compute_stage>::preReturnMap()
+LMDamageAlphaGammaYield::preReturnMap()
 {
   // Damage correction
   _K *= (1.0 - _damage[_qp]);
@@ -51,22 +50,23 @@ LMDamageAlphaGammaYield<compute_stage>::preReturnMap()
   // Damage driving
   _damage_rate[_qp] = 0.0;
 
-  LMAlphaGammaYield<compute_stage>::preReturnMap();
+  LMAlphaGammaYield::preReturnMap();
 }
 
-template <ComputeStage compute_stage>
 void
-LMDamageAlphaGammaYield<compute_stage>::updateYieldParameters(const ADReal & gamma_v)
+LMDamageAlphaGammaYield::updateYieldParameters(const ADReal & gamma_v)
 {
   ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
   _pcr = _pcr_tr * std::exp(_L * gamma_v * _dt);
-  _one_on_A = (1.0 - _damage[_qp]) / ((1.0 - _gamma) * pressure + 0.5 * (1.0 - _damage[_qp]) * _gamma * _pcr);
-  _one_on_B = 1.0 / (_M * (pressure - _alpha * std::sqrt(1.0 - _damage[_qp]) * (pressure - 0.5 * _gamma * _pcr)));
+  _one_on_A = (1.0 - _damage[_qp]) /
+              ((1.0 - _gamma) * pressure + 0.5 * (1.0 - _damage[_qp]) * _gamma * _pcr);
+  _one_on_B =
+      1.0 /
+      (_M * (pressure - _alpha * std::sqrt(1.0 - _damage[_qp]) * (pressure - 0.5 * _gamma * _pcr)));
 }
 
-template <ComputeStage compute_stage>
 void
-LMDamageAlphaGammaYield<compute_stage>::updateYieldParametersDerivV(ADReal & dA, ADReal & dB)
+LMDamageAlphaGammaYield::updateYieldParametersDerivV(ADReal & dA, ADReal & dB)
 {
   dA = (_damage[_qp] != 1.0)
            ? Utility::pow<2>(_one_on_A) *
@@ -77,15 +77,15 @@ LMDamageAlphaGammaYield<compute_stage>::updateYieldParametersDerivV(ADReal & dA,
         0.5 * std::sqrt(1.0 - _damage[_qp]) * _alpha * _gamma * _L * _dt * _pcr);
 }
 
-template <ComputeStage compute_stage>
 void
-LMDamageAlphaGammaYield<compute_stage>::postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d)
+LMDamageAlphaGammaYield::postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d)
 {
-  LMAlphaGammaYield<compute_stage>::postReturnMap(gamma_v, gamma_d);
+  LMAlphaGammaYield::postReturnMap(gamma_v, gamma_d);
 
   ADReal pressure = _pressure_tr - _K * gamma_v * _dt;
   ADReal eqv_stress = _eqv_stress_tr - 3.0 * _G * gamma_d * _dt;
   // Damage driving force
-  ADReal Ya = 0.5 / (1.0 - _damage[_qp]) * (Utility::pow<2>(pressure) / _K + Utility::pow<2>(eqv_stress) / (3.0 * _G));
+  ADReal Ya = 0.5 / (1.0 - _damage[_qp]) *
+              (Utility::pow<2>(pressure) / _K + Utility::pow<2>(eqv_stress) / (3.0 * _G));
   _damage_rate[_qp] = _yield_function[_qp] / (_eta_a * Ya);
 }

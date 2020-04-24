@@ -15,15 +15,10 @@
 
 #include "LMAlphaGammaYield.h"
 
-template <ComputeStage>
-class LMDamageAlphaGammaYield;
-
-declareADValidParams(LMDamageAlphaGammaYield);
-
-template <ComputeStage compute_stage>
-class LMDamageAlphaGammaYield : public LMAlphaGammaYield<compute_stage>
+class LMDamageAlphaGammaYield : public LMAlphaGammaYield
 {
 public:
+  static InputParameters validParams();
   LMDamageAlphaGammaYield(const InputParameters & parameters);
 
 protected:
@@ -38,7 +33,5 @@ protected:
   const Real _eta_a;
 
   // Properties
-  ADMaterialProperty(Real) & _damage_rate;
-
-  usingAlphaGammaYieldMembers;
+  ADMaterialProperty<Real> & _damage_rate;
 };

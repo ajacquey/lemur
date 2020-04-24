@@ -14,22 +14,23 @@
 #include "LMTwoVarUpdate.h"
 #include "ElasticityTensorTools.h"
 
-defineADValidParams(
-    LMTwoVarUpdate,
-    LMViscoPlasticUpdate,
-    params.addClassDescription("Base class for a single variable viscoplastic update."););
+InputParameters
+LMTwoVarUpdate::validParams()
+{
+  InputParameters params = LMViscoPlasticUpdate::validParams();
+  params.addClassDescription("Base class for a single variable viscoplastic update.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMTwoVarUpdate<compute_stage>::LMTwoVarUpdate(const InputParameters & parameters)
-  : LMViscoPlasticUpdate<compute_stage>(parameters)
+LMTwoVarUpdate::LMTwoVarUpdate(const InputParameters & parameters)
+  : LMViscoPlasticUpdate(parameters)
 {
 }
 
-template <ComputeStage compute_stage>
 void
-LMTwoVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                                  const RankFourTensor & Cijkl,
-                                                  ADRankTwoTensor & elastic_strain_incr)
+LMTwoVarUpdate::viscoPlasticUpdate(ADRankTwoTensor & stress,
+                                   const RankFourTensor & Cijkl,
+                                   ADRankTwoTensor & elastic_strain_incr)
 {
   // Here we do an iterative update with two variables (usually scalar volumetric and deviatoric
   // viscoplastic strain rates)
@@ -74,9 +75,8 @@ LMTwoVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
   postReturnMap(gamma_v, gamma_d);
 }
 
-template <ComputeStage compute_stage>
 void
-LMTwoVarUpdate<compute_stage>::returnMap(ADReal & gamma_v, ADReal & gamma_d)
+LMTwoVarUpdate::returnMap(ADReal & gamma_v, ADReal & gamma_d)
 {
   // Initial residual
   ADReal resv_ini = 0.0, resd_ini = 0.0;
@@ -123,12 +123,11 @@ LMTwoVarUpdate<compute_stage>::returnMap(ADReal & gamma_v, ADReal & gamma_d)
       "\n");
 }
 
-template <ComputeStage compute_stage>
 void
-LMTwoVarUpdate<compute_stage>::residual(const ADReal & gamma_v,
-                                        const ADReal & gamma_d,
-                                        ADReal & resv,
-                                        ADReal & resd)
+LMTwoVarUpdate::residual(const ADReal & gamma_v,
+                         const ADReal & gamma_d,
+                         ADReal & resv,
+                         ADReal & resd)
 {
   overStress(gamma_v, gamma_d, resv, resd);
   resv -= _eta_p * gamma_v;
@@ -139,23 +138,20 @@ LMTwoVarUpdate<compute_stage>::residual(const ADReal & gamma_v,
   //   resd -= _eta_p * std::pow(gamma_d, 1.0 / _n);
 }
 
-template <ComputeStage compute_stage>
 void
-LMTwoVarUpdate<compute_stage>::jacobian(const ADReal & gamma_v,
-                                        const ADReal & gamma_d,
-                                        ADReal & jacvv,
-                                        ADReal & jacdd,
-                                        ADReal & jacvd,
-                                        ADReal & jacdv)
+LMTwoVarUpdate::jacobian(const ADReal & gamma_v,
+                         const ADReal & gamma_d,
+                         ADReal & jacvv,
+                         ADReal & jacdd,
+                         ADReal & jacvd,
+                         ADReal & jacdv)
 {
   overStressDerivV(gamma_v, gamma_d, jacvv, jacdv);
   overStressDerivD(gamma_v, gamma_d, jacvd, jacdd);
   jacvv -= _eta_p;
-  jacdd -= _eta_p; 
+  jacdd -= _eta_p;
   // if (gamma_v != 0.0)
   //   jacvv -= _eta_p / _n * std::pow(gamma_v, 1.0 / _n - 1.0);
   // if (gamma_d != 0.0)
   //   jacdd -= _eta_p / _n * std::pow(gamma_d, 1.0 / _n - 1.0);
 }
-
-adBaseClass(LMTwoVarUpdate);

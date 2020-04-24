@@ -15,40 +15,38 @@
 #include "LMViscoPlasticUpdate.h"
 #include "Function.h"
 
-registerADMooseObject("LemurApp", LMMechMaterial);
+registerMooseObject("LemurApp", LMMechMaterial);
 
-defineADValidParams(
-    LMMechMaterial,
-    ADMaterial,
-    params.addClassDescription("Base class calculating the strain and stress of a material.");
-    // Coupled variables
-    params.addRequiredCoupledVar(
-        "displacements",
-        "The displacements appropriate for the simulation geometry and coordinate system.");
-    // Strain parameters
-    MooseEnum strain_model("small=0 finite=1", "small");
-    params.addParam<MooseEnum>("strain_model",
-                               strain_model,
-                               "The model to use to calculate the strain rate tensor.");
-    // Elastic moduli parameters
-    params.addRequiredRangeCheckedParam<Real>("bulk_modulus",
-                                              "bulk_modulus > 0.0",
-                                              "The bulk modulus of the material.");
-    params.addRequiredRangeCheckedParam<Real>("shear_modulus",
-                                              "shear_modulus > 0.0",
-                                              "The shear modulus of the material.");
-    // Initial stress
-    params.addParam<std::vector<FunctionName>>(
-        "initial_stress",
-        "The initial stress principal components (negative in compression).");
-    // Visco-Plastic model
-    params.addParam<MaterialName>("viscoplastic_model",
-                                  "The material object to use for the viscoplastic correction.");
-    params.suppressParameter<bool>("use_displaced_mesh"););
+InputParameters
+LMMechMaterial::validParams()
+{
+  InputParameters params = ADMaterial::validParams();
+  params.addClassDescription("Base class calculating the strain and stress of a material.");
+  // Coupled variables
+  params.addRequiredCoupledVar(
+      "displacements",
+      "The displacements appropriate for the simulation geometry and coordinate system.");
+  // Strain parameters
+  MooseEnum strain_model("small=0 finite=1", "small");
+  params.addParam<MooseEnum>(
+      "strain_model", strain_model, "The model to use to calculate the strain rate tensor.");
+  // Elastic moduli parameters
+  params.addRequiredRangeCheckedParam<Real>(
+      "bulk_modulus", "bulk_modulus > 0.0", "The bulk modulus of the material.");
+  params.addRequiredRangeCheckedParam<Real>(
+      "shear_modulus", "shear_modulus > 0.0", "The shear modulus of the material.");
+  // Initial stress
+  params.addParam<std::vector<FunctionName>>(
+      "initial_stress", "The initial stress principal components (negative in compression).");
+  // Visco-Plastic model
+  params.addParam<MaterialName>("viscoplastic_model",
+                                "The material object to use for the viscoplastic correction.");
+  params.suppressParameter<bool>("use_displaced_mesh");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMMechMaterial<compute_stage>::LMMechMaterial(const InputParameters & parameters)
-  : ADMaterial<compute_stage>(parameters),
+LMMechMaterial::LMMechMaterial(const InputParameters & parameters)
+  : ADMaterial(parameters),
     // Coupled variables
     _ndisp(coupledComponents("displacements")),
     _grad_disp(3),
@@ -77,16 +75,15 @@ LMMechMaterial<compute_stage>::LMMechMaterial(const InputParameters & parameters
 
   if (_num_ini_stress != 3 && _num_ini_stress != 0)
     paramError("initial_stress", "You need to provide 3 components for the initial stress.");
-  
+
   _initial_stress.resize(_num_ini_stress);
 
   for (unsigned int i = 0; i < _num_ini_stress; i++)
     _initial_stress[i] = &getFunctionByName(_initial_stress_fct[i]);
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::initialSetup()
+LMMechMaterial::initialSetup()
 {
   displacementIntegrityCheck();
   // Fetch coupled variables and gradients
@@ -111,9 +108,8 @@ LMMechMaterial<compute_stage>::initialSetup()
   {
     MaterialName vp_model = getParam<MaterialName>("viscoplastic_model");
 
-    LMViscoPlasticUpdate<compute_stage> * vp_r =
-        dynamic_cast<LMViscoPlasticUpdate<compute_stage> *>(
-            &this->template getMaterialByName<compute_stage>(vp_model));
+    LMViscoPlasticUpdate * vp_r =
+        dynamic_cast<LMViscoPlasticUpdate *>(&this->getMaterialByName(vp_model));
 
     _vp_model = vp_r;
   }
@@ -121,9 +117,8 @@ LMMechMaterial<compute_stage>::initialSetup()
     _vp_model = nullptr;
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::displacementIntegrityCheck()
+LMMechMaterial::displacementIntegrityCheck()
 {
   // Checking for consistency between mesh size and length of the provided displacements vector
   if (_ndisp != _mesh.dimension())
@@ -132,9 +127,8 @@ LMMechMaterial<compute_stage>::displacementIntegrityCheck()
         "The number of variables supplied in 'displacements' must match the mesh dimension.");
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::initQpStatefulProperties()
+LMMechMaterial::initQpStatefulProperties()
 {
   _stress[_qp].zero();
   RankTwoTensor init_stress_tensor = RankTwoTensor();
@@ -148,18 +142,16 @@ LMMechMaterial<compute_stage>::initQpStatefulProperties()
   _stress[_qp] += init_stress_tensor;
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpProperties()
+LMMechMaterial::computeQpProperties()
 {
   computeQpStrainIncrement();
   computeQpElasticityTensor();
   computeQpStress();
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpStrainIncrement()
+LMMechMaterial::computeQpStrainIncrement()
 {
   ADRankTwoTensor grad_tensor((*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]);
   RankTwoTensor grad_tensor_old(
@@ -178,10 +170,9 @@ LMMechMaterial<compute_stage>::computeQpStrainIncrement()
   }
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpSmallStrain(const ADRankTwoTensor & grad_tensor,
-                                                    const RankTwoTensor & grad_tensor_old)
+LMMechMaterial::computeQpSmallStrain(const ADRankTwoTensor & grad_tensor,
+                                     const RankTwoTensor & grad_tensor_old)
 {
   ADRankTwoTensor A = grad_tensor - grad_tensor_old;
 
@@ -189,10 +180,9 @@ LMMechMaterial<compute_stage>::computeQpSmallStrain(const ADRankTwoTensor & grad
   _spin_increment[_qp] = 0.5 * (A - A.transpose());
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpFiniteStrain(const ADRankTwoTensor & grad_tensor,
-                                                     const RankTwoTensor & grad_tensor_old)
+LMMechMaterial::computeQpFiniteStrain(const ADRankTwoTensor & grad_tensor,
+                                      const RankTwoTensor & grad_tensor_old)
 {
   ADRankTwoTensor F = grad_tensor;
   RankTwoTensor F_old = grad_tensor_old;
@@ -207,16 +197,14 @@ LMMechMaterial<compute_stage>::computeQpFiniteStrain(const ADRankTwoTensor & gra
   _spin_increment[_qp] = 0.5 * (L - L.transpose());
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpElasticityTensor()
+LMMechMaterial::computeQpElasticityTensor()
 {
   _Cijkl.fillGeneralIsotropic(_bulk_modulus - 2.0 / 3.0 * _shear_modulus, _shear_modulus, 0.0);
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpStress()
+LMMechMaterial::computeQpStress()
 {
   // Elastic guess
   computeQpElasticGuess();
@@ -229,20 +217,16 @@ LMMechMaterial<compute_stage>::computeQpStress()
   }
 }
 
-template <ComputeStage compute_stage>
 void
-LMMechMaterial<compute_stage>::computeQpElasticGuess()
+LMMechMaterial::computeQpElasticGuess()
 {
   _elastic_strain_incr[_qp] = _strain_increment[_qp];
   _stress[_qp] = spinRotation(_stress_old[_qp]) + _Cijkl * _strain_increment[_qp];
 }
 
-template <ComputeStage compute_stage>
 ADRankTwoTensor
-LMMechMaterial<compute_stage>::spinRotation(const ADRankTwoTensor & tensor)
+LMMechMaterial::spinRotation(const ADRankTwoTensor & tensor)
 {
   return tensor + _spin_increment[_qp] * tensor.deviatoric() -
          tensor.deviatoric() * _spin_increment[_qp];
 }
-
-adBaseClass(LMMechMaterial);

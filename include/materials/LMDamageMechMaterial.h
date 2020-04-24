@@ -15,21 +15,12 @@
 
 #include "LMMechMaterial.h"
 
-template <ComputeStage>
-class LMDamageMechMaterial;
-template <typename>
-class RankTwoTensorTempl;
-typedef RankTwoTensorTempl<Real> RankTwoTensor;
-typedef RankTwoTensorTempl<DualReal> DualRankTwoTensor;
-template <ComputeStage>
 class LMViscoPlasticUpdate;
 
-declareADValidParams(LMDamageMechMaterial);
-
-template <ComputeStage compute_stage>
-class LMDamageMechMaterial : public LMMechMaterial<compute_stage>
+class LMDamageMechMaterial : public LMMechMaterial
 {
 public:
+  static InputParameters validParams();
   LMDamageMechMaterial(const InputParameters & parameters);
 
 protected:
@@ -38,6 +29,4 @@ protected:
   // Coupled variables
   const ADVariableValue & _damage_dot;
   const VariableValue & _damage_old;
-
-  usingMechMaterialMembers;
 };

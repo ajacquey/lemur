@@ -15,28 +15,10 @@
 
 #include "LMTwoVarUpdate.h"
 
-#define usingAlphaGammaYieldMembers                                                                \
-  usingTwoVarUpdateMembers;                                                                        \
-  using LMAlphaGammaYield<compute_stage>::_pressure_tr;                                            \
-  using LMAlphaGammaYield<compute_stage>::_eqv_stress_tr;                                          \
-  using LMAlphaGammaYield<compute_stage>::_pcr_tr;                                                 \
-  using LMAlphaGammaYield<compute_stage>::_pcr;                                                    \
-  using LMAlphaGammaYield<compute_stage>::_M;                                                      \
-  using LMAlphaGammaYield<compute_stage>::_L;                                                      \
-  using LMAlphaGammaYield<compute_stage>::_alpha;                                                  \
-  using LMAlphaGammaYield<compute_stage>::_gamma;                                                  \
-  using LMAlphaGammaYield<compute_stage>::_one_on_A;                                               \
-  using LMAlphaGammaYield<compute_stage>::_one_on_B
-
-template <ComputeStage>
-class LMAlphaGammaYield;
-
-declareADValidParams(LMAlphaGammaYield);
-
-template <ComputeStage compute_stage>
-class LMAlphaGammaYield : public LMTwoVarUpdate<compute_stage>
+class LMAlphaGammaYield : public LMTwoVarUpdate
 {
 public:
+  static InputParameters validParams();
   LMAlphaGammaYield(const InputParameters & parameters);
 
 protected:
@@ -83,7 +65,7 @@ protected:
   const Real _gamma;
   const Real _L;
   const bool _has_hardening;
-  ADMaterialProperty(Real) * _intnl;
+  ADMaterialProperty<Real> * _intnl;
   const MaterialProperty<Real> * _intnl_old;
   Real _M;
 
@@ -98,6 +80,4 @@ protected:
   ADReal _chi_d_tr;
 
   ADReal _pcr;
-
-  usingTwoVarUpdateMembers;
 };

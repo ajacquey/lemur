@@ -15,30 +15,12 @@
 
 #include "ADMaterial.h"
 
-#define usingMechMaterialMembers                                                                   \
-  usingMaterialMembers;                                                                            \
-  using LMMechMaterial<compute_stage>::_strain_increment;                                          \
-  using LMMechMaterial<compute_stage>::_elastic_strain_incr;                                       \
-  using LMMechMaterial<compute_stage>::_stress_old;                                                \
-  using LMMechMaterial<compute_stage>::_stress;                                                    \
-  using LMMechMaterial<compute_stage>::_Cijkl;                                                     \
-  using LMMechMaterial<compute_stage>::spinRotation              
-
-template <ComputeStage>
-class LMMechMaterial;
-template <typename>
-class RankTwoTensorTempl;
-typedef RankTwoTensorTempl<Real> RankTwoTensor;
-typedef RankTwoTensorTempl<DualReal> DualRankTwoTensor;
-template <ComputeStage>
 class LMViscoPlasticUpdate;
 
-declareADValidParams(LMMechMaterial);
-
-template <ComputeStage compute_stage>
-class LMMechMaterial : public ADMaterial<compute_stage>
+class LMMechMaterial : public ADMaterial
 {
 public:
+  static InputParameters validParams();
   LMMechMaterial(const InputParameters & parameters);
   void initialSetup() override;
   void displacementIntegrityCheck();
@@ -76,22 +58,20 @@ protected:
   const bool _has_vp;
 
   // Strain properties
-  ADMaterialProperty(RankTwoTensor) & _strain_increment;
-  ADMaterialProperty(RankTwoTensor) & _spin_increment;
-  ADMaterialProperty(RankTwoTensor) & _elastic_strain_incr;
+  ADMaterialProperty<RankTwoTensor> & _strain_increment;
+  ADMaterialProperty<RankTwoTensor> & _spin_increment;
+  ADMaterialProperty<RankTwoTensor> & _elastic_strain_incr;
 
   // Stress properties
-  ADMaterialProperty(RankTwoTensor) & _stress;
+  ADMaterialProperty<RankTwoTensor> & _stress;
   const MaterialProperty<RankTwoTensor> & _stress_old;
 
   // Initial stresses
   std::vector<const Function *> _initial_stress;
 
   // Viscoplastic model
-  LMViscoPlasticUpdate<compute_stage> * _vp_model;
+  LMViscoPlasticUpdate * _vp_model;
 
   // Elasticity tensor
   RankFourTensor _Cijkl;
-
-  usingMaterialMembers;
 };

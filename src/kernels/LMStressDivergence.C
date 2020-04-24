@@ -14,22 +14,26 @@
 #include "LMStressDivergence.h"
 #include "libmesh/quadrature.h"
 
-registerADMooseObject("LemurApp", LMStressDivergence);
+registerMooseObject("LemurApp", LMStressDivergence);
 
-defineADValidParams(
-    LMStressDivergence, ADKernel, params.addClassDescription("Solid momentum kernel.");
-    params.set<bool>("use_displaced_mesh") = false;
-    params.addRequiredParam<unsigned int>("component",
-                                          "An integer corresponding to the direction "
-                                          "the variable this kernel acts in (0 for x, "
-                                          "1 for y, 2 for z).");
-    params.addRangeCheckedParam<Real>(
-        "density", 0.0, "density >= 0.0", "The density of th material.");
-    params.addParam<RealVectorValue>("gravity", RealVectorValue(), "The gravity vector."););
+InputParameters
+LMStressDivergence::validParams()
+{
+  InputParameters params = ADKernel::validParams();
+  params.addClassDescription("Solid momentum kernel.");
+  params.set<bool>("use_displaced_mesh") = false;
+  params.addRequiredParam<unsigned int>("component",
+                                        "An integer corresponding to the direction "
+                                        "the variable this kernel acts in (0 for x, "
+                                        "1 for y, 2 for z).");
+  params.addRangeCheckedParam<Real>(
+      "density", 0.0, "density >= 0.0", "The density of th material.");
+  params.addParam<RealVectorValue>("gravity", RealVectorValue(), "The gravity vector.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMStressDivergence<compute_stage>::LMStressDivergence(const InputParameters & parameters)
-  : ADKernel<compute_stage>(parameters),
+LMStressDivergence::LMStressDivergence(const InputParameters & parameters)
+  : ADKernel(parameters),
     _component(getParam<unsigned int>("component")),
     _rho(getParam<Real>("density")),
     _gravity(getParam<RealVectorValue>("gravity")),
@@ -37,13 +41,11 @@ LMStressDivergence<compute_stage>::LMStressDivergence(const InputParameters & pa
 {
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMStressDivergence<compute_stage>::computeQpResidual()
+LMStressDivergence::computeQpResidual()
 {
   RealVectorValue grav_term = -_rho * _gravity;
 
-  return _stress[_qp].row(_component) * _grad_test[_i][_qp] + grav_term(_component) * _test[_i][_qp];
+  return _stress[_qp].row(_component) * _grad_test[_i][_qp] +
+         grav_term(_component) * _test[_i][_qp];
 }
-
-adBaseClass(LMStressDivergence);

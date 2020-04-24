@@ -13,25 +13,27 @@
 
 #include "LMDruckerPrager.h"
 
-registerADMooseObject("LemurApp", LMDruckerPrager);
+registerMooseObject("LemurApp", LMDruckerPrager);
 
-defineADValidParams(
-    LMDruckerPrager,
-    LMSingleVarUpdate,
-    params.addClassDescription("Viscoplastic update based on a Drucker-Prager yield function.");
-    params.addRequiredRangeCheckedParam<Real>("friction_angle",
-                                              "friction_angle >= 0.0",
-                                              "The friction angle for the Drucker-Prager yield.");
-    params.addRangeCheckedParam<Real>("dilation_angle",
-                                      0.0,
-                                      "dilation_angle >= 0.0",
-                                      "The dilation angle for the Drucker-Prager yield.");
-    params.addRangeCheckedParam<Real>(
-        "cohesion", 0.0, "cohesion >= 0.0", "The cohesion for the Drucker-Prager yield."););
+InputParameters
+LMDruckerPrager::validParams()
+{
+  InputParameters params = LMSingleVarUpdate::validParams();
+  params.addClassDescription("Viscoplastic update based on a Drucker-Prager yield function.");
+  params.addRequiredRangeCheckedParam<Real>("friction_angle",
+                                            "friction_angle >= 0.0",
+                                            "The friction angle for the Drucker-Prager yield.");
+  params.addRangeCheckedParam<Real>("dilation_angle",
+                                    0.0,
+                                    "dilation_angle >= 0.0",
+                                    "The dilation angle for the Drucker-Prager yield.");
+  params.addRangeCheckedParam<Real>(
+      "cohesion", 0.0, "cohesion >= 0.0", "The cohesion for the Drucker-Prager yield.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMDruckerPrager<compute_stage>::LMDruckerPrager(const InputParameters & parameters)
-  : LMSingleVarUpdate<compute_stage>(parameters),
+LMDruckerPrager::LMDruckerPrager(const InputParameters & parameters)
+  : LMSingleVarUpdate(parameters),
     _phi(getParam<Real>("friction_angle")),
     _psi(getParam<Real>("dilation_angle")),
     _C(getParam<Real>("cohesion"))
@@ -41,38 +43,33 @@ LMDruckerPrager<compute_stage>::LMDruckerPrager(const InputParameters & paramete
   _k = std::sqrt(3.0) * _C * std::cos(_phi * libMesh::pi / 180.0);
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMDruckerPrager<compute_stage>::yieldFunction(const ADReal & gamma_vp)
+LMDruckerPrager::yieldFunction(const ADReal & gamma_vp)
 {
   return (_eqv_stress_tr - 3.0 * _G * gamma_vp * _dt) -
          _alpha * (_pressure_tr + _K * _beta * gamma_vp * _dt) - _k;
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMDruckerPrager<compute_stage>::yieldFunctionDeriv(const ADReal & /*gamma_vp*/)
+LMDruckerPrager::yieldFunctionDeriv(const ADReal & /*gamma_vp*/)
 {
   return -(3.0 * _G + _alpha * _beta * _K) * _dt;
 }
 
-template <ComputeStage compute_stage>
 void
-LMDruckerPrager<compute_stage>::preReturnMap()
+LMDruckerPrager::preReturnMap()
 {
   _pressure_tr = -_stress_tr.trace() / 3.0;
   _eqv_stress_tr = std::sqrt(1.5) * _stress_tr.deviatoric().L2norm();
 }
 
-template <ComputeStage compute_stage>
 void
-LMDruckerPrager<compute_stage>::postReturnMap()
+LMDruckerPrager::postReturnMap()
 {
 }
 
-template <ComputeStage compute_stage>
 ADRankTwoTensor
-LMDruckerPrager<compute_stage>::reformPlasticStrainTensor(const ADReal & gamma_vp)
+LMDruckerPrager::reformPlasticStrainTensor(const ADReal & gamma_vp)
 {
   ADRankTwoTensor flow_dir =
       (_eqv_stress_tr != 0.0) ? _stress_tr.deviatoric() / _eqv_stress_tr : ADRankTwoTensor();

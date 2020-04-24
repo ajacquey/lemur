@@ -15,15 +15,10 @@
 
 #include "LMSingleVarUpdate.h"
 
-template <ComputeStage>
-class LMDruckerPrager;
-
-declareADValidParams(LMDruckerPrager);
-
-template <ComputeStage compute_stage>
-class LMDruckerPrager : public LMSingleVarUpdate<compute_stage>
+class LMDruckerPrager : public LMSingleVarUpdate
 {
 public:
+  static InputParameters validParams();
   LMDruckerPrager(const InputParameters & parameters);
 
 protected:
@@ -42,6 +37,4 @@ protected:
 
   ADReal _pressure_tr;
   ADReal _eqv_stress_tr;
-
-  usingSingleVarUpdateMembers;
 };

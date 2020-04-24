@@ -11,26 +11,14 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-
 #pragma once
 
 #include "LMViscoPlasticUpdate.h"
 
-#define usingTwoVarUpdateMembers                                                                   \
-  usingViscoPlasticUpdateMembers;                                                                  \
-  using LMTwoVarUpdate<compute_stage>::_stress_tr;                                                 \
-  using LMTwoVarUpdate<compute_stage>::_K;                                                         \
-  using LMTwoVarUpdate<compute_stage>::_G
-
-template <ComputeStage>
-class LMTwoVarUpdate;
-
-declareADValidParams(LMTwoVarUpdate);
-
-template <ComputeStage compute_stage>
-class LMTwoVarUpdate : public LMViscoPlasticUpdate<compute_stage>
+class LMTwoVarUpdate : public LMViscoPlasticUpdate
 {
 public:
+  static InputParameters validParams();
   LMTwoVarUpdate(const InputParameters & parameters);
   virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
                                   const RankFourTensor & Cijkl,
@@ -69,6 +57,4 @@ protected:
   ADRankTwoTensor _stress_tr;
   ADReal _K;
   ADReal _G;
-
-  usingViscoPlasticUpdateMembers;
 };

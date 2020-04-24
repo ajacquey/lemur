@@ -14,22 +14,23 @@
 #include "LMSingleVarUpdate.h"
 #include "ElasticityTensorTools.h"
 
-defineADValidParams(
-    LMSingleVarUpdate,
-    LMViscoPlasticUpdate,
-    params.addClassDescription("Base class for a single variable viscoplastic update."););
+InputParameters
+LMSingleVarUpdate::validParams()
+{
+  InputParameters params = LMViscoPlasticUpdate::validParams();
+  params.addClassDescription("Base class for a single variable viscoplastic update.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMSingleVarUpdate<compute_stage>::LMSingleVarUpdate(const InputParameters & parameters)
-  : LMViscoPlasticUpdate<compute_stage>(parameters)
+LMSingleVarUpdate::LMSingleVarUpdate(const InputParameters & parameters)
+  : LMViscoPlasticUpdate(parameters)
 {
 }
 
-template <ComputeStage compute_stage>
 void
-LMSingleVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                                     const RankFourTensor & Cijkl,
-                                                     ADRankTwoTensor & elastic_strain_incr)
+LMSingleVarUpdate::viscoPlasticUpdate(ADRankTwoTensor & stress,
+                                      const RankFourTensor & Cijkl,
+                                      ADRankTwoTensor & elastic_strain_incr)
 {
   // Here we do an iterative update with a single variable (usually scalar viscoplastic strain rate)
   // We are trying to find the zero of the function F which is defined as:
@@ -68,9 +69,8 @@ LMSingleVarUpdate<compute_stage>::viscoPlasticUpdate(ADRankTwoTensor & stress,
   postReturnMap();
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMSingleVarUpdate<compute_stage>::returnMap()
+LMSingleVarUpdate::returnMap()
 {
   // Initialize scalar viscoplastic strain rate
   ADReal gamma_vp = 0.0;
@@ -96,9 +96,8 @@ LMSingleVarUpdate<compute_stage>::returnMap()
   throw MooseException("LMSingleVarUpdate: maximum number of iterations exceeded in 'returnMap'!");
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMSingleVarUpdate<compute_stage>::residual(const ADReal & gamma_vp)
+LMSingleVarUpdate::residual(const ADReal & gamma_vp)
 {
   ADReal res = yieldFunction(gamma_vp);
   if (gamma_vp != 0.0)
@@ -107,9 +106,8 @@ LMSingleVarUpdate<compute_stage>::residual(const ADReal & gamma_vp)
   return res;
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMSingleVarUpdate<compute_stage>::jacobian(const ADReal & gamma_vp)
+LMSingleVarUpdate::jacobian(const ADReal & gamma_vp)
 {
   ADReal jac = yieldFunctionDeriv(gamma_vp);
   if (gamma_vp != 0.0)
@@ -117,5 +115,3 @@ LMSingleVarUpdate<compute_stage>::jacobian(const ADReal & gamma_vp)
 
   return jac;
 }
-
-adBaseClass(LMSingleVarUpdate);

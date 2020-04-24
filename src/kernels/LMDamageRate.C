@@ -13,21 +13,23 @@
 
 #include "LMDamageRate.h"
 
-registerADMooseObject("LemurApp", LMDamageRate);
+registerMooseObject("LemurApp", LMDamageRate);
 
-defineADValidParams(
-    LMDamageRate, ADKernel, params.addClassDescription("Damage rate kernel."););
+InputParameters
+LMDamageRate::validParams()
+{
+  InputParameters params = ADKernel::validParams();
+  params.addClassDescription("Damage rate kernel.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMDamageRate<compute_stage>::LMDamageRate(const InputParameters & parameters)
-  : ADKernel<compute_stage>(parameters),
-    _damage_rate(getADMaterialProperty<Real>("damage_rate"))
+LMDamageRate::LMDamageRate(const InputParameters & parameters)
+  : ADKernel(parameters), _damage_rate(getADMaterialProperty<Real>("damage_rate"))
 {
 }
 
-template <ComputeStage compute_stage>
 ADReal
-LMDamageRate<compute_stage>::computeQpResidual()
+LMDamageRate::computeQpResidual()
 {
   return -_damage_rate[_qp] * _test[_i][_qp];
 }

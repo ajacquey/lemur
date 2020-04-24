@@ -13,29 +13,28 @@
 
 #include "LMDamageMechMaterial.h"
 
-registerADMooseObject("LemurApp", LMDamageMechMaterial);
+registerMooseObject("LemurApp", LMDamageMechMaterial);
 
-defineADValidParams(
-    LMDamageMechMaterial,
-    LMMechMaterial,
-    params.addClassDescription("Base class calculating the strain and stress of a damaged material.");
-    // Coupled variables
-    params.addRequiredCoupledVar(
-        "damage",
-        "The damage variable."););
+InputParameters
+LMDamageMechMaterial::validParams()
+{
+  InputParameters params = LMMechMaterial::validParams();
+  params.addClassDescription("Base class calculating the strain and stress of a damaged material.");
+  // Coupled variables
+  params.addRequiredCoupledVar("damage", "The damage variable.");
+  return params;
+}
 
-template <ComputeStage compute_stage>
-LMDamageMechMaterial<compute_stage>::LMDamageMechMaterial(const InputParameters & parameters)
-  : LMMechMaterial<compute_stage>(parameters),
+LMDamageMechMaterial::LMDamageMechMaterial(const InputParameters & parameters)
+  : LMMechMaterial(parameters),
     // Coupled variables
     _damage_dot(adCoupledDot("damage")),
     _damage_old(coupledValueOld("damage"))
 {
 }
 
-template <ComputeStage compute_stage>
 void
-LMDamageMechMaterial<compute_stage>::computeQpElasticGuess()
+LMDamageMechMaterial::computeQpElasticGuess()
 {
   _elastic_strain_incr[_qp] = _strain_increment[_qp];
   ADReal damage_corr = 1.0 - _damage_dot[_qp] * _dt / (1.0 - _damage_old[_qp]);
