@@ -13,14 +13,31 @@
 
 #pragma once
 
-#include "LMStressAuxBase.h"
+#include "LMSingleVarUpdate.h"
 
-class LMVonMisesStressAux : public LMStressAuxBase
+class LMVonMises : public LMSingleVarUpdate
 {
 public:
   static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  LMVonMises(const InputParameters & parameters);
 
 protected:
-  virtual Real computeValue() override;
+  virtual void initQpStatefulProperties() override;
+  virtual ADReal yieldFunction(const ADReal & gamma_vp) override;
+  virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) override;
+  virtual void preReturnMap() override;
+  virtual void postReturnMap(const ADReal & gamma_vp) override;
+  virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) override;
+
+  const bool _coupled_v;
+  const ADVariableValue & _v;
+  const Real _yield_strength;
+  const Real _hg;
+  const Real _ht;
+  const bool _has_hardening;
+  ADMaterialProperty<Real> * _intnl;
+  const MaterialProperty<Real> * _intnl_old;
+
+  ADReal _tau_tr;
+  ADReal _yield_strength_tr;
 };

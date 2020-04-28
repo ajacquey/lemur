@@ -13,14 +13,19 @@
 
 #pragma once
 
-#include "LMStressAuxBase.h"
+#include "TimeKernel.h"
 
-class LMVonMisesStressAux : public LMStressAuxBase
+class LMInertialForce : public TimeKernel
 {
 public:
   static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  LMInertialForce(const InputParameters & parameters);
 
 protected:
-  virtual Real computeValue() override;
+  virtual Real computeQpResidual() override;
+  virtual Real computeQpJacobian() override;
+
+  const VariableValue & _u_dot_dot;
+  const VariableValue & _du_dot_dot_du;
+  const Real _rho;
 };

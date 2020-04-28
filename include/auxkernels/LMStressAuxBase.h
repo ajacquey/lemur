@@ -15,18 +15,13 @@
 
 #include "AuxKernel.h"
 #include "RankTwoTensor.h"
-#include "DerivativeMaterialInterface.h"
 
-class LMStressAuxBase;
-
-template <>
-InputParameters validParams<LMStressAuxBase>();
-
-class LMStressAuxBase : public DerivativeMaterialInterface<AuxKernel>
+class LMStressAuxBase : public AuxKernel
 {
 public:
+  static InputParameters validParams();
   LMStressAuxBase(const InputParameters & parameters);
 
 protected:
-  const MaterialProperty<RankTwoTensor> & _stress;
+  const ADMaterialProperty<RankTwoTensor> & _stress;
 };

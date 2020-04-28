@@ -13,14 +13,17 @@
 
 #pragma once
 
-#include "LMStressAuxBase.h"
+#include "LMStressAux.h"
 
-class LMVonMisesStressAux : public LMStressAuxBase
+class LMStressAux : public LMStressAuxBase
 {
 public:
   static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  LMStressAux(const InputParameters & parameters);
 
 protected:
   virtual Real computeValue() override;
+
+  const unsigned int _i;
+  const unsigned int _j;
 };

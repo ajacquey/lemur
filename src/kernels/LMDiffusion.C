@@ -11,16 +11,27 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#pragma once
+#include "LMDiffusion.h"
 
-#include "LMStressAuxBase.h"
+registerMooseObject("LemurApp", LMDiffusion);
 
-class LMVonMisesStressAux : public LMStressAuxBase
+InputParameters
+LMDiffusion::validParams()
 {
-public:
-  static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  InputParameters params = ADKernelGrad::validParams();
+  params.addClassDescription("Diffusion kernel with diffusivity coefficient.");
+  params.addRangeCheckedParam<Real>(
+      "diffusivity", "diffusivity>0.0", "The diffusivity coefficient.");
+  return params;
+}
 
-protected:
-  virtual Real computeValue() override;
-};
+LMDiffusion::LMDiffusion(const InputParameters & parameters)
+  : ADKernelGrad(parameters), _diffusivity(getParam<Real>("diffusivity"))
+{
+}
+
+ADRealVectorValue
+LMDiffusion::precomputeQpResidual()
+{
+  return _diffusivity * _grad_u[_qp];
+}

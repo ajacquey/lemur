@@ -12,14 +12,14 @@
 /******************************************************************************/
 
 #include "LMEqvStrainRateAux.h"
+#include "metaphysicl/raw_type.h"
 
 registerMooseObject("LemurApp", LMEqvStrainRateAux);
 
-template <>
 InputParameters
-validParams<LMEqvStrainRateAux>()
+LMEqvStrainRateAux::validParams()
 {
-  InputParameters params = validParams<LMStrainAuxBase>();
+  InputParameters params = LMStrainAuxBase::validParams();
   params.addClassDescription("Calculates the equivalent strain rate of the given tensor.");
   return params;
 }
@@ -32,5 +32,6 @@ LMEqvStrainRateAux::LMEqvStrainRateAux(const InputParameters & parameters)
 Real
 LMEqvStrainRateAux::computeValue()
 {
-  return std::sqrt(2.0 / 3.0) * (*_strain_incr)[_qp].deviatoric().L2norm() / _dt;
+  return std::sqrt(2.0 / 3.0) * MetaPhysicL::raw_value((*_strain_incr)[_qp].deviatoric().L2norm()) /
+         _dt;
 }

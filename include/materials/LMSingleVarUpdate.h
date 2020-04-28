@@ -32,7 +32,7 @@ protected:
   virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) = 0;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) = 0;
   virtual void preReturnMap() = 0;
-  virtual void postReturnMap() = 0;
+  virtual void postReturnMap(const ADReal & gamma_vp) = 0;
 
   ADRankTwoTensor _stress_tr;
   ADReal _K;

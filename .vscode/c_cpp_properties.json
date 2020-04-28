@@ -3,6 +3,7 @@
         {
             "name": "Mac",
             "includePath": ["${workspaceFolder}",
+                "${workspaceFolder}/build/header_symlinks",
                 "${workspaceFolder}/../moose/framework/build/header_symlinks",
                 "${workspaceFolder}/../moose/modules/module_loader/build/header_symlinks",
                 "${workspaceFolder}/../moose/framework/contrib/boost/include",
@@ -20,6 +21,7 @@
             "intelliSenseMode": "clang-x64",
             "compileCommands": "${workspaceFolder}/compile_commands.json",
             "browse": {"path": ["${workspaceFolder}",
+                                "${workspaceFolder}/build/header_symlinks",
                                 "${workspaceFolder}/../moose/framework/build/header_symlinks",
                                 "${workspaceFolder}/../moose/modules/module_loader/build/header_symlinks",
                                 "${workspaceFolder}/../moose/framework/contrib/boost/include",

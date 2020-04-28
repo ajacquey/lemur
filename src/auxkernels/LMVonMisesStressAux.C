@@ -12,14 +12,14 @@
 /******************************************************************************/
 
 #include "LMVonMisesStressAux.h"
+#include "metaphysicl/raw_type.h"
 
 registerMooseObject("LemurApp", LMVonMisesStressAux);
 
-template <>
 InputParameters
-validParams<LMVonMisesStressAux>()
+LMVonMisesStressAux::validParams()
 {
-  InputParameters params = validParams<LMStressAuxBase>();
+  InputParameters params = LMStressAuxBase::validParams();
   params.addClassDescription("Calculates the Von Mises stress.");
   return params;
 }
@@ -32,6 +32,6 @@ LMVonMisesStressAux::LMVonMisesStressAux(const InputParameters & parameters)
 Real
 LMVonMisesStressAux::computeValue()
 {
-  RankTwoTensor stress_dev = _stress[_qp].deviatoric();
-  return std::sqrt(1.5) * stress_dev.L2norm();
+  ADRankTwoTensor stress_dev = _stress[_qp].deviatoric();
+  return std::sqrt(1.5) * MetaPhysicL::raw_value(stress_dev.L2norm());
 }

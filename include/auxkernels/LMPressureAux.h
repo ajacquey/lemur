@@ -15,14 +15,10 @@
 
 #include "LMStressAuxBase.h"
 
-class LMPressureAux;
-
-template <>
-InputParameters validParams<LMPressureAux>();
-
 class LMPressureAux : public LMStressAuxBase
 {
 public:
+  static InputParameters validParams();
   LMPressureAux(const InputParameters & parameters);
 
 protected:

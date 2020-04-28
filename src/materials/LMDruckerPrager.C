@@ -64,7 +64,7 @@ LMDruckerPrager::preReturnMap()
 }
 
 void
-LMDruckerPrager::postReturnMap()
+LMDruckerPrager::postReturnMap(const ADReal & /*gamma_vp*/)
 {
 }
 

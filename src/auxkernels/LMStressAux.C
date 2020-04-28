@@ -11,16 +11,33 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#pragma once
+#include "LMStressAux.h"
+#include "metaphysicl/raw_type.h"
 
-#include "LMStressAuxBase.h"
+registerMooseObject("LemurApp", LMStressAux);
 
-class LMVonMisesStressAux : public LMStressAuxBase
+InputParameters
+LMStressAux::validParams()
 {
-public:
-  static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  InputParameters params = LMStressAuxBase::validParams();
+  params.addClassDescription("Class for outputting a component of the stress tensor based on the "
+                             "indexes i and j. Returns stress(i, j).");
+  params.addRequiredRangeCheckedParam<unsigned int>(
+      "index_i", "index_i>=0 & index_i<=2", "The i index.");
+  params.addRequiredRangeCheckedParam<unsigned int>(
+      "index_j", "index_j>=0 & index_j<=2", "The j index.");
+  return params;
+}
 
-protected:
-  virtual Real computeValue() override;
-};
+LMStressAux::LMStressAux(const InputParameters & parameters)
+  : LMStressAuxBase(parameters),
+    _i(getParam<unsigned int>("index_i")),
+    _j(getParam<unsigned int>("index_j"))
+{
+}
+
+Real
+LMStressAux::computeValue()
+{
+  return MetaPhysicL::raw_value(_stress[_qp](_i, _j));
+}

@@ -12,14 +12,14 @@
 /******************************************************************************/
 
 #include "LMPressureAux.h"
+#include "metaphysicl/raw_type.h"
 
 registerMooseObject("LemurApp", LMPressureAux);
 
-template <>
 InputParameters
-validParams<LMPressureAux>()
+LMPressureAux::validParams()
 {
-  InputParameters params = validParams<LMStressAuxBase>();
+  InputParameters params = LMStressAuxBase::validParams();
   params.addClassDescription("Calculates the pressure.");
   return params;
 }
@@ -29,5 +29,5 @@ LMPressureAux::LMPressureAux(const InputParameters & parameters) : LMStressAuxBa
 Real
 LMPressureAux::computeValue()
 {
-  return -_stress[_qp].trace() / 3.0;
+  return -MetaPhysicL::raw_value(_stress[_qp].trace()) / 3.0;
 }

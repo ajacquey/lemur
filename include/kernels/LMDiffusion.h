@@ -13,14 +13,16 @@
 
 #pragma once
 
-#include "LMStressAuxBase.h"
+#include "ADKernelGrad.h"
 
-class LMVonMisesStressAux : public LMStressAuxBase
+class LMDiffusion : public ADKernelGrad
 {
 public:
   static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  LMDiffusion(const InputParameters & parameters);
 
 protected:
-  virtual Real computeValue() override;
+  virtual ADRealVectorValue precomputeQpResidual() override;
+
+  const Real _diffusivity;
 };

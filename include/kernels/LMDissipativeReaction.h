@@ -13,14 +13,17 @@
 
 #pragma once
 
-#include "LMStressAuxBase.h"
+#include "ADKernelValue.h"
 
-class LMVonMisesStressAux : public LMStressAuxBase
+class LMDissipativeReaction : public ADKernelValue
 {
 public:
   static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  LMDissipativeReaction(const InputParameters & parameters);
 
 protected:
-  virtual Real computeValue() override;
+  virtual ADReal precomputeQpResidual() override;
+
+  const Real _alpha;
+  const ADMaterialProperty<RankTwoTensor> & _plastic_strain_incr;
 };

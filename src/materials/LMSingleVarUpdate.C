@@ -66,7 +66,7 @@ LMSingleVarUpdate::viscoPlasticUpdate(ADRankTwoTensor & stress,
   _plastic_strain_incr[_qp] = reformPlasticStrainTensor(gamma_vp);
   elastic_strain_incr -= _plastic_strain_incr[_qp];
   stress -= Cijkl * _plastic_strain_incr[_qp];
-  postReturnMap();
+  postReturnMap(gamma_vp);
 }
 
 ADReal

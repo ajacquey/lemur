@@ -15,14 +15,10 @@
 
 #include "LMStrainAuxBase.h"
 
-class LMVolStrainRateAux;
-
-template <>
-InputParameters validParams<LMVolStrainRateAux>();
-
 class LMVolStrainRateAux : public LMStrainAuxBase
 {
 public:
+  static InputParameters validParams();
   LMVolStrainRateAux(const InputParameters & parameters);
 
 protected:

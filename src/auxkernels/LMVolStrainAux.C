@@ -12,14 +12,14 @@
 /******************************************************************************/
 
 #include "LMVolStrainAux.h"
+#include "metaphysicl/raw_type.h"
 
 registerMooseObject("LemurApp", LMVolStrainAux);
 
-template <>
 InputParameters
-validParams<LMVolStrainAux>()
+LMVolStrainAux::validParams()
 {
-  InputParameters params = validParams<LMStrainAuxBase>();
+  InputParameters params = LMStrainAuxBase::validParams();
   params.addClassDescription("Calculates the volumetric strain of the given tensor.");
   return params;
 }
@@ -29,5 +29,5 @@ LMVolStrainAux::LMVolStrainAux(const InputParameters & parameters) : LMStrainAux
 Real
 LMVolStrainAux::computeValue()
 {
-  return _u_old[_qp] + (*_strain_incr)[_qp].trace();
+  return _u_old[_qp] + MetaPhysicL::raw_value((*_strain_incr)[_qp].trace());
 }

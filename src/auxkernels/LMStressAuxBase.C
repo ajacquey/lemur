@@ -13,17 +13,15 @@
 
 #include "LMStressAuxBase.h"
 
-template <>
 InputParameters
-validParams<LMStressAuxBase>()
+LMStressAuxBase::validParams()
 {
-  InputParameters params = validParams<AuxKernel>();
+  InputParameters params = AuxKernel::validParams();
   params.addClassDescription("Base class for outputting stress values.");
   return params;
 }
 
 LMStressAuxBase::LMStressAuxBase(const InputParameters & parameters)
-  : DerivativeMaterialInterface<AuxKernel>(parameters),
-    _stress(getMaterialProperty<RankTwoTensor>("stress"))
+  : AuxKernel(parameters), _stress(getADMaterialProperty<RankTwoTensor>("stress"))
 {
 }

@@ -15,14 +15,10 @@
 
 #include "LMStrainAuxBase.h"
 
-class LMEqvStrainAux;
-
-template <>
-InputParameters validParams<LMEqvStrainAux>();
-
 class LMEqvStrainAux : public LMStrainAuxBase
 {
 public:
+  static InputParameters validParams();
   LMEqvStrainAux(const InputParameters & parameters);
 
 protected:

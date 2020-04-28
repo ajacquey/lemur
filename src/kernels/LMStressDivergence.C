@@ -27,7 +27,7 @@ LMStressDivergence::validParams()
                                         "the variable this kernel acts in (0 for x, "
                                         "1 for y, 2 for z).");
   params.addRangeCheckedParam<Real>(
-      "density", 0.0, "density >= 0.0", "The density of th material.");
+      "density", 0.0, "density >= 0.0", "The density of the material.");
   params.addParam<RealVectorValue>("gravity", RealVectorValue(), "The gravity vector.");
   return params;
 }

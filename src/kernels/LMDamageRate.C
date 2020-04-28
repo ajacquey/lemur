@@ -18,18 +18,18 @@ registerMooseObject("LemurApp", LMDamageRate);
 InputParameters
 LMDamageRate::validParams()
 {
-  InputParameters params = ADKernel::validParams();
+  InputParameters params = ADKernelValue::validParams();
   params.addClassDescription("Damage rate kernel.");
   return params;
 }
 
 LMDamageRate::LMDamageRate(const InputParameters & parameters)
-  : ADKernel(parameters), _damage_rate(getADMaterialProperty<Real>("damage_rate"))
+  : ADKernelValue(parameters), _damage_rate(getADMaterialProperty<Real>("damage_rate"))
 {
 }
 
 ADReal
-LMDamageRate::computeQpResidual()
+LMDamageRate::precomputeQpResidual()
 {
-  return -_damage_rate[_qp] * _test[_i][_qp];
+  return -_damage_rate[_qp];
 }

@@ -34,7 +34,7 @@ LMMechMaterial::validParams()
   params.addRequiredRangeCheckedParam<Real>(
       "bulk_modulus", "bulk_modulus > 0.0", "The bulk modulus of the material.");
   params.addRequiredRangeCheckedParam<Real>(
-      "shear_modulus", "shear_modulus > 0.0", "The shear modulus of the material.");
+      "shear_modulus", "shear_modulus >= 0.0", "The shear modulus of the material.");
   // Initial stress
   params.addParam<std::vector<FunctionName>>(
       "initial_stress", "The initial stress principal components (negative in compression).");

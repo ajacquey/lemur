@@ -11,16 +11,37 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#pragma once
+#include "LMInertialForce.h"
 
-#include "LMStressAuxBase.h"
+registerMooseObject("LemurApp", LMInertialForce);
 
-class LMVonMisesStressAux : public LMStressAuxBase
+InputParameters
+LMInertialForce::validParams()
 {
-public:
-  static InputParameters validParams();
-  LMVonMisesStressAux(const InputParameters & parameters);
+  InputParameters params = TimeKernel::validParams();
+  params.addClassDescription("Inertial term for dynamic deformation.");
+  params.set<bool>("use_displaced_mesh") = true;
+  params.addRangeCheckedParam<Real>(
+      "density", 1.0, "density >= 0.0", "The density of the material.");
+  return params;
+}
 
-protected:
-  virtual Real computeValue() override;
-};
+LMInertialForce::LMInertialForce(const InputParameters & parameters)
+  : TimeKernel(parameters),
+    _u_dot_dot(dotDot()),
+    _du_dot_dot_du(dotDotDu()),
+    _rho(getParam<Real>("density"))
+{
+}
+
+Real
+LMInertialForce::computeQpResidual()
+{
+  return _rho * _u_dot_dot[_qp] * _test[_i][_qp];
+}
+
+Real
+LMInertialForce::computeQpJacobian()
+{
+  return _rho * _du_dot_dot_du[_qp] * _test[_i][_qp];
+}

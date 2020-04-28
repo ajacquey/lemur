@@ -12,14 +12,14 @@
 /******************************************************************************/
 
 #include "LMEqvStrainAux.h"
+#include "metaphysicl/raw_type.h"
 
 registerMooseObject("LemurApp", LMEqvStrainAux);
 
-template <>
 InputParameters
-validParams<LMEqvStrainAux>()
+LMEqvStrainAux::validParams()
 {
-  InputParameters params = validParams<LMStrainAuxBase>();
+  InputParameters params = LMStrainAuxBase::validParams();
   params.addClassDescription("Calculates the equivalent strain of the given tensor.");
   return params;
 }
@@ -29,5 +29,6 @@ LMEqvStrainAux::LMEqvStrainAux(const InputParameters & parameters) : LMStrainAux
 Real
 LMEqvStrainAux::computeValue()
 {
-  return _u_old[_qp] + std::sqrt(2.0 / 3.0) * (*_strain_incr)[_qp].deviatoric().L2norm();
+  return _u_old[_qp] +
+         std::sqrt(2.0 / 3.0) * MetaPhysicL::raw_value((*_strain_incr)[_qp].deviatoric().L2norm());
 }

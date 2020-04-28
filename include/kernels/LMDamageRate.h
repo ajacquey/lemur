@@ -13,16 +13,16 @@
 
 #pragma once
 
-#include "ADKernel.h"
+#include "ADKernelValue.h"
 
-class LMDamageRate : public ADKernel
+class LMDamageRate : public ADKernelValue
 {
 public:
   static InputParameters validParams();
   LMDamageRate(const InputParameters & parameters);
 
 protected:
-  virtual ADReal computeQpResidual() override;
+  virtual ADReal precomputeQpResidual() override;
 
   const ADMaterialProperty<Real> & _damage_rate;
 };

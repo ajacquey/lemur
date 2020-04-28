@@ -13,11 +13,10 @@
 
 #include "LMStrainAuxBase.h"
 
-template <>
 InputParameters
-validParams<LMStrainAuxBase>()
+LMStrainAuxBase::validParams()
 {
-  InputParameters params = validParams<AuxKernel>();
+  InputParameters params = AuxKernel::validParams();
   params.addClassDescription("Base class for outputting strain values.");
   params.addParam<MooseEnum>("strain_type",
                              LMStrainAuxBase::strainType() = "total",
@@ -26,8 +25,7 @@ validParams<LMStrainAuxBase>()
 }
 
 LMStrainAuxBase::LMStrainAuxBase(const InputParameters & parameters)
-  : DerivativeMaterialInterface<AuxKernel>(parameters),
-    _strain_type(getParam<MooseEnum>("strain_type"))
+  : AuxKernel(parameters), _strain_type(getParam<MooseEnum>("strain_type"))
 {
   switch (_strain_type)
   {
@@ -43,7 +41,7 @@ LMStrainAuxBase::LMStrainAuxBase(const InputParameters & parameters)
     default:
       mooseError("LMStrainAuxBase: unknown strain type!");
   }
-  _strain_incr = &getDefaultMaterialProperty<RankTwoTensor>(_strain_name);
+  _strain_incr = &getADMaterialProperty<RankTwoTensor>(_strain_name);
 }
 
 MooseEnum

@@ -25,7 +25,7 @@ protected:
   virtual ADReal yieldFunction(const ADReal & gamma_vp) override;
   virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) override;
   virtual void preReturnMap() override;
-  virtual void postReturnMap() override;
+  virtual void postReturnMap(const ADReal & /*gamma_vp*/) override;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) override;
 
   const Real _phi;
