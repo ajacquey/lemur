@@ -13,19 +13,17 @@
 
 #pragma once
 
-#include "TimeKernel.h"
+#include "ADTimeKernel.h"
 
-class LMInertialForce : public TimeKernel
+class LMFluidFlowTimeDerivative : public ADTimeKernel
 {
 public:
   static InputParameters validParams();
-  LMInertialForce(const InputParameters & parameters);
+  LMFluidFlowTimeDerivative(const InputParameters & parameters);
 
 protected:
-  virtual Real computeQpResidual() override;
-  virtual Real computeQpJacobian() override;
+  virtual ADReal computeQpResidual() override;
 
-  const VariableValue & _u_dot_dot;
-  const VariableValue & _du_dot_dot_du;
-  const Real _rho;
+  const MaterialProperty<Real> & _C_biot;
+  const ADMaterialProperty<Real> & _poro_mech;
 };

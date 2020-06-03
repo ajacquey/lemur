@@ -11,23 +11,35 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#include "LMPressureAux.h"
+#include "LMPorosityAux.h"
 #include "metaphysicl/raw_type.h"
 
-registerMooseObject("LemurApp", LMPressureAux);
+registerMooseObject("LemurApp", LMPorosityAux);
 
 InputParameters
-LMPressureAux::validParams()
+LMPorosityAux::validParams()
 {
-  InputParameters params = LMStressAuxBase::validParams();
-  params.addClassDescription("Calculates the effective pressure.");
+  InputParameters params = AuxKernel::validParams();
+  params.addClassDescription("Calculates the porosity.");
+  params.addCoupledVar("fluid_pressure", "The fluid pressure variable.");
   return params;
 }
 
-LMPressureAux::LMPressureAux(const InputParameters & parameters) : LMStressAuxBase(parameters) {}
+LMPorosityAux::LMPorosityAux(const InputParameters & parameters)
+  : AuxKernel(parameters),
+    _pf_dot(coupledDot("fluid_pressure")),
+    _biot(getMaterialProperty<Real>("biot_coefficient")),
+    _K(getMaterialProperty<Real>("bulk_modulus")),
+    _strain_incr(getADMaterialProperty<RankTwoTensor>("strain_increment")),
+    _plastic_strain_incr(getADMaterialProperty<RankTwoTensor>("plastic_strain_increment"))
+{
+}
 
 Real
-LMPressureAux::computeValue()
+LMPorosityAux::computeValue()
 {
-  return -MetaPhysicL::raw_value(_stress[_qp].trace()) / 3.0;
+  return _u_old[_qp] +
+         (_biot[_qp] - _u[_qp]) * ((1.0 - _biot[_qp]) / _K[_qp] * _pf_dot[_qp] * _dt +
+                                   MetaPhysicL::raw_value(_strain_incr[_qp].trace())) +
+         (1.0 - _biot[_qp]) * MetaPhysicL::raw_value(_plastic_strain_incr[_qp].trace());
 }

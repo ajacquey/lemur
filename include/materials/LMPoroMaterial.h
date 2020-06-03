@@ -13,17 +13,29 @@
 
 #pragma once
 
-#include "ADKernelValue.h"
+#include "ADMaterial.h"
 
-class LMDissipativeReaction : public ADKernelValue
+class LMPoroMaterial : public ADMaterial
 {
 public:
   static InputParameters validParams();
-  LMDissipativeReaction(const InputParameters & parameters);
+  LMPoroMaterial(const InputParameters & parameters);
 
 protected:
-  virtual ADReal precomputeQpResidual() override;
+  virtual void computeQpProperties() override;
 
-  const Real _alpha;
-  const ADMaterialProperty<RankTwoTensor> & _plastic_strain_incr;
+  const VariableValue & _porosity;
+  const bool _coupled_mech;
+  const Real _perm;
+  const Real _fluid_visco;
+  const Real _Kf;
+  const Real _Ks;
+
+  const MaterialProperty<Real> * _K;
+  const ADMaterialProperty<RankTwoTensor> * _strain_increment;
+  const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
+  MaterialProperty<Real> & _C_biot;
+  MaterialProperty<Real> & _fluid_mob;
+  MaterialProperty<Real> & _biot;
+  ADMaterialProperty<Real> & _poro_mech;
 };

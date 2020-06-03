@@ -24,8 +24,11 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
+  const ADVariableValue & _pf;
   const unsigned int _component;
   const Real _rho;
   const RealVectorValue _gravity;
+  const bool _coupled_pf;
   const ADMaterialProperty<RankTwoTensor> & _stress;
+  const MaterialProperty<Real> * _biot;
 };

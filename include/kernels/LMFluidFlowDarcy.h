@@ -11,31 +11,18 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#include "LMDissipativeReaction.h"
+#pragma once
 
-registerMooseObject("LemurApp", LMDissipativeReaction);
+#include "ADKernelGrad.h"
 
-InputParameters
-LMDissipativeReaction::validParams()
+class LMFluidFlowDarcy : public ADKernelGrad
 {
-  InputParameters params = ADKernelValue::validParams();
-  params.addClassDescription(
-      "Kernel for mechanical dissipative reaction in a diffusion-reaction equation.");
-  params.addParam<Real>("coefficient", 1.0, "The coefficient in front of the dissipative term.");
-  return params;
-}
+public:
+  static InputParameters validParams();
+  LMFluidFlowDarcy(const InputParameters & parameters);
 
-LMDissipativeReaction::LMDissipativeReaction(const InputParameters & parameters)
-  : ADKernelValue(parameters),
-    _alpha(getParam<Real>("coefficient")),
-    _plastic_strain_incr(getADMaterialProperty<RankTwoTensor>("plastic_strain_increment"))
-{
-}
+protected:
+  virtual ADRealVectorValue precomputeQpResidual() override;
 
-ADReal
-LMDissipativeReaction::precomputeQpResidual()
-{
-  ADReal gamma_vp =
-      (_dt != 0.0) ? std::sqrt(0.5) * _plastic_strain_incr[_qp].deviatoric().L2norm() / _dt : 0.0;
-  return -_alpha * gamma_vp;
-}
+  const MaterialProperty<Real> & _fluid_mob;
+};

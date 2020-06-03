@@ -63,6 +63,7 @@ protected:
   ADMaterialProperty<RankTwoTensor> & _elastic_strain_incr;
 
   // Stress properties
+  MaterialProperty<Real> & _K;
   ADMaterialProperty<RankTwoTensor> & _stress;
   const MaterialProperty<RankTwoTensor> & _stress_old;
 

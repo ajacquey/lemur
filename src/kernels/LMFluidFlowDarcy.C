@@ -11,18 +11,25 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#pragma once
+#include "LMFluidFlowDarcy.h"
 
-#include "ADKernelGrad.h"
+registerMooseObject("LemurApp", LMFluidFlowDarcy);
 
-class LMDiffusion : public ADKernelGrad
+InputParameters
+LMFluidFlowDarcy::validParams()
 {
-public:
-  static InputParameters validParams();
-  LMDiffusion(const InputParameters & parameters);
+  InputParameters params = ADKernelGrad::validParams();
+  params.addClassDescription("Divergence of Darcy's velocity for the fluid pressure equation.");
+  return params;
+}
 
-protected:
-  virtual ADRealVectorValue precomputeQpResidual() override;
+LMFluidFlowDarcy::LMFluidFlowDarcy(const InputParameters & parameters)
+  : ADKernelGrad(parameters), _fluid_mob(getMaterialProperty<Real>("fluid_mobility"))
+{
+}
 
-  const Real _diffusivity;
-};
+ADRealVectorValue
+LMFluidFlowDarcy::precomputeQpResidual()
+{
+  return _fluid_mob[_qp] * _grad_u[_qp];
+}

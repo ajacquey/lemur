@@ -21,6 +21,7 @@ LMStressDivergence::validParams()
 {
   InputParameters params = ADKernel::validParams();
   params.addClassDescription("Solid momentum kernel.");
+  params.addCoupledVar("fluid_pressure", 0, "The fluid pressure variable.");
   params.set<bool>("use_displaced_mesh") = false;
   params.addRequiredParam<unsigned int>("component",
                                         "An integer corresponding to the direction "
@@ -34,10 +35,13 @@ LMStressDivergence::validParams()
 
 LMStressDivergence::LMStressDivergence(const InputParameters & parameters)
   : ADKernel(parameters),
+    _pf(adCoupledValue("fluid_pressure")),
     _component(getParam<unsigned int>("component")),
     _rho(getParam<Real>("density")),
     _gravity(getParam<RealVectorValue>("gravity")),
-    _stress(getADMaterialProperty<RankTwoTensor>("stress"))
+    _coupled_pf(isCoupled("fluid_pressure")),
+    _stress(getADMaterialProperty<RankTwoTensor>("stress")),
+    _biot(_coupled_pf ? &getMaterialProperty<Real>("biot_coefficient") : nullptr)
 {
 }
 
@@ -46,6 +50,9 @@ LMStressDivergence::computeQpResidual()
 {
   RealVectorValue grav_term = -_rho * _gravity;
 
-  return _stress[_qp].row(_component) * _grad_test[_i][_qp] +
-         grav_term(_component) * _test[_i][_qp];
+  ADRealVectorValue stress_row = _stress[_qp].row(_component);
+  if (_coupled_pf)
+    stress_row(_component) -= (*_biot)[_qp] * _pf[_qp];
+
+  return stress_row * _grad_test[_i][_qp] + grav_term(_component) * _test[_i][_qp];
 }

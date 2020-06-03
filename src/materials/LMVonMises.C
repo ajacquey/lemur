@@ -20,23 +20,16 @@ LMVonMises::validParams()
 {
   InputParameters params = LMSingleVarUpdate::validParams();
   params.addClassDescription("Viscoplastic update based on a Von Mises yield function.");
-  params.addCoupledVar("coupled_var", "A coupled variable on which the yield depends.");
   params.addRequiredRangeCheckedParam<Real>(
       "yield_strength", "yield_strength >= 0.0", "The yield strength.");
   params.addParam<Real>("hardening_modulus", 0.0, "The hardening modulus of the Von Mises yield.");
-  params.addParam<Real>("coupled_hardening_modulus",
-                        0.0,
-                        "The hardening modulus of the coupled variable for the Von Mises yield.");
   return params;
 }
 
 LMVonMises::LMVonMises(const InputParameters & parameters)
   : LMSingleVarUpdate(parameters),
-    _coupled_v(isCoupled("coupled_var")),
-    _v(_coupled_v ? adCoupledValue("coupled_var") : adZeroValue()),
     _yield_strength(getParam<Real>("yield_strength")),
     _hg(getParam<Real>("hardening_modulus")),
-    _ht(getParam<Real>("coupled_hardening_modulus")),
     _has_hardening(_hg != 0.0),
     _intnl(_has_hardening ? &declareADProperty<Real>("deviatoric_plastic_strain") : nullptr),
     _intnl_old(_has_hardening ? &getMaterialPropertyOld<Real>("deviatoric_plastic_strain")
@@ -72,7 +65,7 @@ LMVonMises::preReturnMap()
   if (_has_hardening)
   {
     (*_intnl)[_qp] = (*_intnl_old)[_qp];
-    _yield_strength_tr = _yield_strength + _hg * (*_intnl)[_qp] + _ht * _v[_qp];
+    _yield_strength_tr = _yield_strength + _hg * (*_intnl)[_qp];
   }
 }
 

@@ -11,27 +11,27 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#include "LMDiffusion.h"
+#include "LMFluidFlowTimeDerivative.h"
 
-registerMooseObject("LemurApp", LMDiffusion);
+registerMooseObject("LemurApp", LMFluidFlowTimeDerivative);
 
 InputParameters
-LMDiffusion::validParams()
+LMFluidFlowTimeDerivative::validParams()
 {
-  InputParameters params = ADKernelGrad::validParams();
-  params.addClassDescription("Diffusion kernel with diffusivity coefficient.");
-  params.addRangeCheckedParam<Real>(
-      "diffusivity", "diffusivity>0.0", "The diffusivity coefficient.");
+  InputParameters params = ADTimeKernel::validParams();
+  params.addClassDescription("Time derivative of fluid pressure for poro-mechanics.");
   return params;
 }
 
-LMDiffusion::LMDiffusion(const InputParameters & parameters)
-  : ADKernelGrad(parameters), _diffusivity(getParam<Real>("diffusivity"))
+LMFluidFlowTimeDerivative::LMFluidFlowTimeDerivative(const InputParameters & parameters)
+  : ADTimeKernel(parameters),
+    _C_biot(getMaterialProperty<Real>("biot_compressibility")),
+    _poro_mech(getADMaterialProperty<Real>("poro_mech"))
 {
 }
 
-ADRealVectorValue
-LMDiffusion::precomputeQpResidual()
+ADReal
+LMFluidFlowTimeDerivative::computeQpResidual()
 {
-  return _diffusivity * _grad_u[_qp];
+  return (_C_biot[_qp] * _u_dot[_qp] + _poro_mech[_qp]) * _test[_i][_qp];
 }

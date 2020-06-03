@@ -11,37 +11,22 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#include "LMInertialForce.h"
+#pragma once
 
-registerMooseObject("LemurApp", LMInertialForce);
+#include "AuxKernel.h"
 
-InputParameters
-LMInertialForce::validParams()
+class LMPorosityAux : public AuxKernel
 {
-  InputParameters params = TimeKernel::validParams();
-  params.addClassDescription("Inertial term for dynamic deformation.");
-  params.set<bool>("use_displaced_mesh") = true;
-  params.addRangeCheckedParam<Real>(
-      "density", 1.0, "density >= 0.0", "The density of the material.");
-  return params;
-}
+public:
+  static InputParameters validParams();
+  LMPorosityAux(const InputParameters & parameters);
 
-LMInertialForce::LMInertialForce(const InputParameters & parameters)
-  : TimeKernel(parameters),
-    _u_dot_dot(dotDot()),
-    _du_dot_dot_du(dotDotDu()),
-    _rho(getParam<Real>("density"))
-{
-}
+protected:
+  virtual Real computeValue() override;
 
-Real
-LMInertialForce::computeQpResidual()
-{
-  return _rho * _u_dot_dot[_qp] * _test[_i][_qp];
-}
-
-Real
-LMInertialForce::computeQpJacobian()
-{
-  return _rho * _du_dot_dot_du[_qp] * _test[_i][_qp];
-}
+  const VariableValue & _pf_dot;
+  const MaterialProperty<Real> & _biot;
+  const MaterialProperty<Real> & _K;
+  const ADMaterialProperty<RankTwoTensor> & _strain_incr;
+  const ADMaterialProperty<RankTwoTensor> & _plastic_strain_incr;
+};

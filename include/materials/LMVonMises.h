@@ -29,11 +29,8 @@ protected:
   virtual void postReturnMap(const ADReal & gamma_vp) override;
   virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) override;
 
-  const bool _coupled_v;
-  const ADVariableValue & _v;
   const Real _yield_strength;
   const Real _hg;
-  const Real _ht;
   const bool _has_hardening;
   ADMaterialProperty<Real> * _intnl;
   const MaterialProperty<Real> * _intnl_old;

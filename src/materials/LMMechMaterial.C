@@ -34,7 +34,7 @@ LMMechMaterial::validParams()
   params.addRequiredRangeCheckedParam<Real>(
       "bulk_modulus", "bulk_modulus > 0.0", "The bulk modulus of the material.");
   params.addRequiredRangeCheckedParam<Real>(
-      "shear_modulus", "shear_modulus >= 0.0", "The shear modulus of the material.");
+      "shear_modulus", "shear_modulus > 0.0", "The shear modulus of the material.");
   // Initial stress
   params.addParam<std::vector<FunctionName>>(
       "initial_stress", "The initial stress principal components (negative in compression).");
@@ -66,6 +66,7 @@ LMMechMaterial::LMMechMaterial(const InputParameters & parameters)
     _spin_increment(declareADProperty<RankTwoTensor>("spin_increment")),
     _elastic_strain_incr(declareADProperty<RankTwoTensor>("elastic_strain_increment")),
     // Stress properties
+    _K(declareProperty<Real>("bulk_modulus")),
     _stress(declareADProperty<RankTwoTensor>("stress")),
     _stress_old(getMaterialPropertyOld<RankTwoTensor>("stress"))
 {
@@ -200,6 +201,9 @@ LMMechMaterial::computeQpFiniteStrain(const ADRankTwoTensor & grad_tensor,
 void
 LMMechMaterial::computeQpElasticityTensor()
 {
+  // Bulk modulus
+  _K[_qp] = _bulk_modulus;
+  // Elasticity tensor
   _Cijkl.fillGeneralIsotropic(_bulk_modulus - 2.0 / 3.0 * _shear_modulus, _shear_modulus, 0.0);
 }
 
