@@ -1,0 +1,12 @@
+[Tests]
+  [./maxwell]
+    type = 'Exodiff'
+    input = 'maxwell.i'
+    exodiff = 'maxwell_out.e'
+  [../]
+  [./non-linear]
+    type = 'Exodiff'
+    input = 'non-linear-visco.i'
+    exodiff = 'non-linear-visco_out.e'
+  [../]
+[]

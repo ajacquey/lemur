@@ -33,6 +33,9 @@ protected:
 
   const MaterialProperty<Real> * _K;
   const ADMaterialProperty<RankTwoTensor> * _strain_increment;
+  const bool _has_ve;
+  const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;
+  const bool _has_vp;
   const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
   MaterialProperty<Real> & _C_biot;
   MaterialProperty<Real> & _fluid_mob;

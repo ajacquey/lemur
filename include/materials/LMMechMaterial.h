@@ -15,6 +15,7 @@
 
 #include "ADMaterial.h"
 
+class LMViscoElasticUpdate;
 class LMViscoPlasticUpdate;
 
 class LMMechMaterial : public ADMaterial
@@ -54,7 +55,10 @@ protected:
   const std::vector<FunctionName> _initial_stress_fct;
   const unsigned int _num_ini_stress;
 
-  // Viscoplastoc model
+  // Viscoelastic model
+  const bool _has_ve;
+
+  // Viscoplastic model
   const bool _has_vp;
 
   // Strain properties
@@ -69,6 +73,9 @@ protected:
 
   // Initial stresses
   std::vector<const Function *> _initial_stress;
+
+  // Viscoelastic model
+  LMViscoElasticUpdate * _ve_model;
 
   // Viscoplastic model
   LMViscoPlasticUpdate * _vp_model;

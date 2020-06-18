@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/lemur-dbg",
-            "args": ["-i", "test/tests/kernels/simple_diffusion/simple_diffusion.i"],
+            "args": ["-i", "test/tests/viscoelastic/maxwell.i"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

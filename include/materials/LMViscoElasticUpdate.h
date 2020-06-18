@@ -15,27 +15,39 @@
 
 #include "ADMaterial.h"
 
-class LMViscoPlasticUpdate : public ADMaterial
+class LMViscoElasticUpdate : public ADMaterial
 {
 public:
   static InputParameters validParams();
-  LMViscoPlasticUpdate(const InputParameters & parameters);
+  LMViscoElasticUpdate(const InputParameters & parameters);
   void setQp(unsigned int qp);
-  virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
+  virtual void viscoElasticUpdate(ADRankTwoTensor & stress,
                                   const RankFourTensor & Cijkl,
-                                  ADRankTwoTensor & elastic_strain_incr) = 0;
+                                  ADRankTwoTensor & elastic_strain_incr);
   void resetQpProperties() final {}
   void resetProperties() final {}
 
 protected:
-  const ADVariableValue & _pf;
+  virtual ADReal returnMap();
+  virtual ADReal residual(const ADReal & gamma_v);
+  virtual ADReal jacobian(const ADReal & gamma_v);
+  virtual ADReal stressInvariant(const ADReal & gamma_v);
+  virtual ADReal stressInvariantDeriv(const ADReal & gamma_v);
+  virtual ADRankTwoTensor reformViscousStrainTensor(const ADReal & gamma_v);
+  virtual ADReal effectiveViscosity(const ADReal & gamma_v) = 0;
+  virtual ADReal creepRate(const ADReal & gamma_v) = 0;
+  virtual ADReal creepRateDeriv(const ADReal & gamma_v) = 0;
+  virtual void preReturnMap() = 0;
+  virtual void postReturnMap(const ADReal & gamma_v) = 0;
+
   const Real _abs_tol;
   const Real _rel_tol;
-  const unsigned int _max_its;
-  const Real _eta_p;
-  const Real _n;
-  const Real _pf0;
+  unsigned int _max_its;
 
-  ADMaterialProperty<Real> & _yield_function;
-  ADMaterialProperty<RankTwoTensor> & _plastic_strain_incr;
+  ADRankTwoTensor _stress_tr;
+  ADReal _tau_tr;
+  ADReal _G;
+
+  ADMaterialProperty<Real> & _viscosity;
+  ADMaterialProperty<RankTwoTensor> & _viscous_strain_incr;
 };

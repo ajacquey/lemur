@@ -43,9 +43,12 @@ LMPoroMaterial::LMPoroMaterial(const InputParameters & parameters)
     _K(_coupled_mech ? &getMaterialProperty<Real>("bulk_modulus") : nullptr),
     _strain_increment(_coupled_mech ? &getADMaterialProperty<RankTwoTensor>("strain_increment")
                                     : nullptr),
-    _plastic_strain_incr(_coupled_mech
-                             ? &getADMaterialProperty<RankTwoTensor>("plastic_strain_increment")
-                             : nullptr),
+    _has_ve(hasADMaterialProperty<Real>("effective_viscosity")),
+    _viscous_strain_incr(_has_ve ? &getADMaterialProperty<RankTwoTensor>("viscous_strain_increment")
+                                 : nullptr),
+    _has_vp(hasADMaterialProperty<Real>("yield_function")),
+    _plastic_strain_incr(_has_vp ? &getADMaterialProperty<RankTwoTensor>("plastic_strain_increment")
+                                 : nullptr),
     _C_biot(declareProperty<Real>("biot_compressibility")),
     _fluid_mob(declareProperty<Real>("fluid_mobility")),
     _biot(declareProperty<Real>("biot_coefficient")),
@@ -86,6 +89,11 @@ LMPoroMaterial::computeQpProperties()
   // Poro-mechanics
   _poro_mech[_qp] = 0.0;
   if (_coupled_mech && _fe_problem.isTransient())
+  {
     _poro_mech[_qp] += _biot[_qp] * (*_strain_increment)[_qp].trace() / _dt;
-  _poro_mech[_qp] += (1.0 - _biot[_qp]) * (*_plastic_strain_incr)[_qp].trace() / _dt;
+    if (_has_ve)
+      _poro_mech[_qp] += (1.0 - _biot[_qp]) * (*_viscous_strain_incr)[_qp].trace() / _dt;
+    if (_has_vp)
+      _poro_mech[_qp] += (1.0 - _biot[_qp]) * (*_plastic_strain_incr)[_qp].trace() / _dt;
+  }
 }

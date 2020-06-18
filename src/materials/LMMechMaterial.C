@@ -12,6 +12,7 @@
 /******************************************************************************/
 
 #include "LMMechMaterial.h"
+#include "LMViscoElasticUpdate.h"
 #include "LMViscoPlasticUpdate.h"
 #include "Function.h"
 
@@ -38,6 +39,9 @@ LMMechMaterial::validParams()
   // Initial stress
   params.addParam<std::vector<FunctionName>>(
       "initial_stress", "The initial stress principal components (negative in compression).");
+  // Visco-Elastic model
+  params.addParam<MaterialName>("viscoelastic_model",
+                                "The material object to use for the viscoelastic correction.");
   // Visco-Plastic model
   params.addParam<MaterialName>("viscoplastic_model",
                                 "The material object to use for the viscoplastic correction.");
@@ -59,6 +63,8 @@ LMMechMaterial::LMMechMaterial(const InputParameters & parameters)
     // Initial stress
     _initial_stress_fct(getParam<std::vector<FunctionName>>("initial_stress")),
     _num_ini_stress(_initial_stress_fct.size()),
+    // Visco-Elastic model
+    _has_ve(isParamValid("viscoelastic_model")),
     // Visco-Plastic model
     _has_vp(isParamValid("viscoplastic_model")),
     // Strain properties
@@ -103,6 +109,19 @@ LMMechMaterial::initialSetup()
     _grad_disp[i] = &adZeroGradient();
     _grad_disp_old[i] = &_grad_zero;
   }
+
+  // Fetch viscoelastic model object
+  if (_has_ve)
+  {
+    MaterialName ve_model = getParam<MaterialName>("viscoelastic_model");
+
+    LMViscoElasticUpdate * ve_r =
+        dynamic_cast<LMViscoElasticUpdate *>(&this->getMaterialByName(ve_model));
+
+    _ve_model = ve_r;
+  }
+  else
+    _ve_model = nullptr;
 
   // Fetch viscoplastic model object
   if (_has_vp)
@@ -212,6 +231,13 @@ LMMechMaterial::computeQpStress()
 {
   // Elastic guess
   computeQpElasticGuess();
+
+  // Viscoelastic correction
+  if (_has_ve)
+  {
+    _ve_model->setQp(_qp);
+    _ve_model->viscoElasticUpdate(_stress[_qp], _Cijkl, _elastic_strain_incr[_qp]);
+  }
 
   // Viscoplastic correction
   if (_has_vp)

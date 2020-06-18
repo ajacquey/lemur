@@ -13,23 +13,20 @@
 
 #pragma once
 
-#include "AuxKernel.h"
+#include "LMViscoElasticUpdate.h"
 
-class LMPorosityAux : public AuxKernel
+class LMMaxwell : public LMViscoElasticUpdate
 {
 public:
   static InputParameters validParams();
-  LMPorosityAux(const InputParameters & parameters);
+  LMMaxwell(const InputParameters & parameters);
 
 protected:
-  virtual Real computeValue() override;
+  virtual ADReal effectiveViscosity(const ADReal & gamma_v) override;
+  virtual ADReal creepRate(const ADReal & gamma_v) override;
+  virtual ADReal creepRateDeriv(const ADReal & gamma_v) override;
+  virtual void preReturnMap() override;
+  virtual void postReturnMap(const ADReal & /*gamma_v*/) override;
 
-  const VariableValue & _pf_dot;
-  const MaterialProperty<Real> & _biot;
-  const MaterialProperty<Real> & _K;
-  const ADMaterialProperty<RankTwoTensor> & _strain_incr;
-  const bool _has_ve;
-  const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;
-  const bool _has_vp;
-  const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
+  const Real _eta;
 };

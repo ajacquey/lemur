@@ -36,6 +36,9 @@ LMStrainAuxBase::LMStrainAuxBase(const InputParameters & parameters)
       _strain_name = "elastic_strain_increment";
       break;
     case 3:
+      _strain_name = "viscous_strain_increment";
+      break;
+    case 4:
       _strain_name = "plastic_strain_increment";
       break;
     default:
@@ -47,5 +50,5 @@ LMStrainAuxBase::LMStrainAuxBase(const InputParameters & parameters)
 MooseEnum
 LMStrainAuxBase::strainType()
 {
-  return MooseEnum("total=1 elastic=2 plastic=3");
+  return MooseEnum("total=1 elastic=2 viscous=3 plastic=4");
 }

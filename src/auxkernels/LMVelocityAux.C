@@ -11,25 +11,26 @@
 /*                 or http://www.gnu.org/licenses/lgpl.html                   */
 /******************************************************************************/
 
-#pragma once
+#include "LMVelocityAux.h"
 
-#include "AuxKernel.h"
+registerMooseObject("LemurApp", LMVelocityAux);
 
-class LMPorosityAux : public AuxKernel
+InputParameters
+LMVelocityAux::validParams()
 {
-public:
-  static InputParameters validParams();
-  LMPorosityAux(const InputParameters & parameters);
+  InputParameters params = AuxKernel::validParams();
+  params.addClassDescription("Calculates the velocity based on the displacement.");
+  params.addCoupledVar("displacement", "The displacement component.");
+  return params;
+}
 
-protected:
-  virtual Real computeValue() override;
+LMVelocityAux::LMVelocityAux(const InputParameters & parameters)
+  : AuxKernel(parameters), _disp_dot(coupledDot("displacement"))
+{
+}
 
-  const VariableValue & _pf_dot;
-  const MaterialProperty<Real> & _biot;
-  const MaterialProperty<Real> & _K;
-  const ADMaterialProperty<RankTwoTensor> & _strain_incr;
-  const bool _has_ve;
-  const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;
-  const bool _has_vp;
-  const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
-};
+Real
+LMVelocityAux::computeValue()
+{
+  return _disp_dot[_qp];
+}

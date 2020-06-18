@@ -61,7 +61,7 @@ LMAlphaGammaYield::initQpStatefulProperties()
 ADReal
 LMAlphaGammaYield::yieldFunction(const ADReal & chi_v, const ADReal & chi_d)
 {
-  return Utility::pow<2>(chi_v * _one_on_A) + Utility::pow<2>(chi_d * _one_on_B) - 1.0;
+  return std::sqrt(Utility::pow<2>(chi_v * _one_on_A) + Utility::pow<2>(chi_d * _one_on_B)) - 1.0;
 }
 
 void
@@ -243,7 +243,7 @@ LMAlphaGammaYield::d2yieldFunctiondVol2(const ADReal & chi_v, const ADReal & chi
 {
   ADReal f = yieldFunction(chi_v, chi_d);
   ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
-  return (Utility::pow<2>(_one_on_A) * -Utility::pow<2>(df_dchi_v)) / (1.0 + f);
+  return (Utility::pow<2>(_one_on_A) - Utility::pow<2>(df_dchi_v)) / (1.0 + f);
 }
 
 ADReal
@@ -269,7 +269,7 @@ LMAlphaGammaYield::d2yieldFunctiondDev2(const ADReal & chi_v, const ADReal & chi
 {
   ADReal f = yieldFunction(chi_v, chi_d);
   ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
-  return (Utility::pow<2>(_one_on_B) * -Utility::pow<2>(df_dchi_d)) / (1.0 + f);
+  return (Utility::pow<2>(_one_on_B) - Utility::pow<2>(df_dchi_d)) / (1.0 + f);
 }
 
 ADReal

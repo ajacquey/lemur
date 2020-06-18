@@ -15,21 +15,14 @@
 
 #include "AuxKernel.h"
 
-class LMPorosityAux : public AuxKernel
+class LMVelocityAux : public AuxKernel
 {
 public:
   static InputParameters validParams();
-  LMPorosityAux(const InputParameters & parameters);
+  LMVelocityAux(const InputParameters & parameters);
 
 protected:
   virtual Real computeValue() override;
 
-  const VariableValue & _pf_dot;
-  const MaterialProperty<Real> & _biot;
-  const MaterialProperty<Real> & _K;
-  const ADMaterialProperty<RankTwoTensor> & _strain_incr;
-  const bool _has_ve;
-  const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;
-  const bool _has_vp;
-  const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
+  const VariableValue & _disp_dot;
 };
