@@ -13,28 +13,25 @@
 
 #pragma once
 
-#include "LMViscoPlasticUpdate.h"
+#include "LMMechMaterialBase.h"
 
-class LMSingleVarUpdate : public LMViscoPlasticUpdate
+class LMPoroMechMaterial : public LMMechMaterialBase
 {
 public:
   static InputParameters validParams();
-  LMSingleVarUpdate(const InputParameters & parameters);
-  virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                  const ADRankFourTensor & Cijkl,
-                                  ADRankTwoTensor & elastic_strain_incr) override;
+  LMPoroMechMaterial(const InputParameters & parameters);
 
 protected:
-  virtual ADReal returnMap();
-  virtual ADReal residual(const ADReal & gamma_vp);
-  virtual ADReal jacobian(const ADReal & gamma_vp);
-  virtual ADReal yieldFunction(const ADReal & gamma_vp) = 0;
-  virtual ADReal yieldFunctionDeriv(const ADReal & gamma_vp) = 0;
-  virtual ADRankTwoTensor reformPlasticStrainTensor(const ADReal & gamma_vp) = 0;
-  virtual void preReturnMap() = 0;
-  virtual void postReturnMap(const ADReal & gamma_vp) = 0;
+  virtual void initQpStatefulProperties() override;
+  virtual void computeQpElasticityTensor() override;
 
-  ADRankTwoTensor _stress_tr;
-  ADReal _K;
-  ADReal _G;
+  // Coupled variables
+  const VariableValue & _porosity;
+
+  // Elastic parameters
+  const Real _compression_idx;
+  const Real _poisson_ratio;
+
+  // Strain quantities
+  const MaterialProperty<RankTwoTensor> & _elastic_strain_incr_old;
 };

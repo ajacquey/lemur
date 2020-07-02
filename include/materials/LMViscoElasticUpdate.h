@@ -22,7 +22,7 @@ public:
   LMViscoElasticUpdate(const InputParameters & parameters);
   void setQp(unsigned int qp);
   virtual void viscoElasticUpdate(ADRankTwoTensor & stress,
-                                  const RankFourTensor & Cijkl,
+                                  const ADRankFourTensor & Cijkl,
                                   ADRankTwoTensor & elastic_strain_incr);
   void resetQpProperties() final {}
   void resetProperties() final {}

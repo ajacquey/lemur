@@ -30,5 +30,5 @@ protected:
   const RealVectorValue _gravity;
   const bool _coupled_pf;
   const ADMaterialProperty<RankTwoTensor> & _stress;
-  const MaterialProperty<Real> * _biot;
+  const ADMaterialProperty<Real> * _biot;
 };

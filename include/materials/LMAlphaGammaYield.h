@@ -23,6 +23,14 @@ public:
 
 protected:
   virtual void initQpStatefulProperties() override;
+  // virtual void
+  // residual(const ADReal & gamma_v, const ADReal & gamma_d, ADReal & resv, ADReal & resd)
+  // override; virtual void jacobian(const ADReal & gamma_v,
+  //                       const ADReal & gamma_d,
+  //                       ADReal & jacvv,
+  //                       ADReal & jacdd,
+  //                       ADReal & jacvd,
+  //                       ADReal & jacdv) override;
   virtual ADReal yieldFunction(const ADReal & gamma_v, const ADReal & gamma_d) override;
   virtual void overStress(const ADReal & gamma_v,
                           const ADReal & gamma_d,
@@ -59,11 +67,16 @@ protected:
   virtual ADReal d2yieldFunctiondDevA(const ADReal & chi_v, const ADReal & chi_d);
   virtual ADReal d2yieldFunctiondDevB(const ADReal & chi_v, const ADReal & chi_d);
 
+  // Coupled Variables
+  const bool _coupled_porosity;
+  const VariableValue & _porosity;
+
   const Real _phi;
   const Real _pcr0;
   const Real _alpha;
   const Real _gamma;
   const Real _L;
+  const Real _a;
   const bool _has_hardening;
   ADMaterialProperty<Real> * _intnl;
   const MaterialProperty<Real> * _intnl_old;

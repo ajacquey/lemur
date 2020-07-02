@@ -29,7 +29,7 @@ LMSingleVarUpdate::LMSingleVarUpdate(const InputParameters & parameters)
 
 void
 LMSingleVarUpdate::viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                      const RankFourTensor & Cijkl,
+                                      const ADRankFourTensor & Cijkl,
                                       ADRankTwoTensor & elastic_strain_incr)
 {
   // Here we do an iterative update with a single variable (usually scalar viscoplastic strain rate)

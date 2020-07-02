@@ -54,7 +54,7 @@ LMViscoElasticUpdate::setQp(unsigned int qp)
 
 void
 LMViscoElasticUpdate::viscoElasticUpdate(ADRankTwoTensor & stress,
-                                         const RankFourTensor & Cijkl,
+                                         const ADRankFourTensor & Cijkl,
                                          ADRankTwoTensor & elastic_strain_incr)
 {
   // Here we do an iterative update with a single variable (usually scalar viscous strain rate)

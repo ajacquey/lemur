@@ -42,6 +42,11 @@ LMViscoPlasticUpdate::validParams()
                                     1.0,
                                     "reference_fluid_pressure>0.0",
                                     "The reference fluid pressure.");
+  params.addRangeCheckedParam<Real>(
+      "Arrhenius_coefficient",
+      0.0,
+      "Arrhenius_coefficient>=0",
+      "The Arrhenius coefficient for the fludi pressure activated viscosity.");
   return params;
 }
 
@@ -54,6 +59,7 @@ LMViscoPlasticUpdate::LMViscoPlasticUpdate(const InputParameters & parameters)
     _eta_p(getParam<Real>("plastic_viscosity")),
     _n(getParam<Real>("exponent")),
     _pf0(getParam<Real>("reference_fluid_pressure")),
+    _Ar(getParam<Real>("Arrhenius_coefficient")),
     _yield_function(declareADProperty<Real>("yield_function")),
     _plastic_strain_incr(declareADProperty<RankTwoTensor>("plastic_strain_increment"))
 {

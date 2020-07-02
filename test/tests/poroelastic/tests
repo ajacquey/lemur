@@ -1,0 +1,7 @@
+[Tests]
+  [./poroelastic]
+    type = 'Exodiff'
+    input = 'terzaghi.i'
+    exodiff = 'terzaghi_out.e'
+  [../]
+[]

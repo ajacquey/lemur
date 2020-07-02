@@ -41,7 +41,7 @@ LMStressDivergence::LMStressDivergence(const InputParameters & parameters)
     _gravity(getParam<RealVectorValue>("gravity")),
     _coupled_pf(isCoupled("fluid_pressure")),
     _stress(getADMaterialProperty<RankTwoTensor>("stress")),
-    _biot(_coupled_pf ? &getMaterialProperty<Real>("biot_coefficient") : nullptr)
+    _biot(_coupled_pf ? &getADMaterialProperty<Real>("biot_coefficient") : nullptr)
 {
 }
 

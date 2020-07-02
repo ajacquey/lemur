@@ -20,6 +20,8 @@ LMAlphaGammaYield::validParams()
 {
   InputParameters params = LMTwoVarUpdate::validParams();
   params.addClassDescription("Viscoplastic update based on the alpha-gamma yield functions.");
+  // Coupled variables
+  params.addCoupledVar("porosity", "The porosity variable.");
   params.addRequiredRangeCheckedParam<Real>(
       "friction_angle", "friction_angle > 0.0", "The friction angle for the critical state line.");
   params.addRequiredRangeCheckedParam<Real>(
@@ -33,16 +35,24 @@ LMAlphaGammaYield::validParams()
                                     "critical_pressure_hardening >= 0.0",
                                     "The hardening parameter in the exponential for the critical "
                                     "pressure of the capped yield.");
+  params.addRangeCheckedParam<Real>("porosity_hardening",
+                                    0.0,
+                                    "porosity_hardening>=0.0",
+                                    "The coefficient for porosity hardening of the viscosity.");
   return params;
 }
 
 LMAlphaGammaYield::LMAlphaGammaYield(const InputParameters & parameters)
   : LMTwoVarUpdate(parameters),
+    // Coupled variables
+    _coupled_porosity(isCoupled("porosity")),
+    _porosity(_coupled_porosity ? coupledValue("porosity") : _zero),
     _phi(getParam<Real>("friction_angle")),
     _pcr0(getParam<Real>("critical_pressure")),
     _alpha(getParam<Real>("alpha")),
     _gamma(getParam<Real>("gamma")),
     _L(getParam<Real>("critical_pressure_hardening")),
+    _a(getParam<Real>("porosity_hardening")),
     _has_hardening(_L != 0.0),
     _intnl(_has_hardening ? &declareADProperty<Real>("volumetric_plastic_strain") : nullptr),
     _intnl_old(_has_hardening ? &getMaterialPropertyOld<Real>("volumetric_plastic_strain")
@@ -78,8 +88,8 @@ LMAlphaGammaYield::overStress(const ADReal & gamma_v,
   ADReal df_dchi_v = dyieldFunctiondVol(chi_v, chi_d);
   ADReal df_dchi_d = dyieldFunctiondDev(chi_v, chi_d);
 
-  over_v = f * df_dchi_v;
-  over_d = f * df_dchi_d;
+  over_v = std::pow(f, _n) * df_dchi_v;
+  over_d = std::pow(f, _n) * df_dchi_d;
 }
 
 void
@@ -113,14 +123,16 @@ LMAlphaGammaYield::overStressDerivV(const ADReal & gamma_v,
   updateYieldParametersDerivV(dA, dB);
 
   // Over stress derivatives wrt dissipative stress
-  ADReal over_v_dchi_v = Utility::pow<2>(df_dchi_v) + f * d2f_dchi_v2;
-  ADReal over_d_dchi_v = df_dchi_v * df_dchi_d + f * d2f_dchi_d_dchi_v;
+  ADReal over_v_dchi_v =
+      std::pow(f, _n - 1.0) * (_n * Utility::pow<2>(df_dchi_v) + f * d2f_dchi_v2);
+  ADReal over_d_dchi_v =
+      std::pow(f, _n - 1.0) * (_n * df_dchi_v * df_dchi_d + f * d2f_dchi_d_dchi_v);
 
   // Over stress derivatives wrt yield parameters
-  ADReal over_v_dA = df_dA * df_dchi_v + f * d2f_dchi_v_dA;
-  ADReal over_v_dB = df_dB * df_dchi_v + f * d2f_dchi_v_dB;
-  ADReal over_d_dA = df_dA * df_dchi_d + f * d2f_dchi_d_dA;
-  ADReal over_d_dB = df_dB * df_dchi_d + f * d2f_dchi_d_dB;
+  ADReal over_v_dA = std::pow(f, _n - 1.0) * (_n * df_dA * df_dchi_v + f * d2f_dchi_v_dA);
+  ADReal over_v_dB = std::pow(f, _n - 1.0) * (_n * df_dB * df_dchi_v + f * d2f_dchi_v_dB);
+  ADReal over_d_dA = std::pow(f, _n - 1.0) * (_n * df_dA * df_dchi_d + f * d2f_dchi_d_dA);
+  ADReal over_d_dB = std::pow(f, _n - 1.0) * (_n * df_dB * df_dchi_d + f * d2f_dchi_d_dB);
 
   over_v_v = over_v_dchi_v * dchi_v + over_v_dA * dA + over_v_dB * dB;
   over_d_v = over_d_dchi_v * dchi_v + over_d_dA * dA + over_d_dB * dB;
@@ -147,8 +159,10 @@ LMAlphaGammaYield::overStressDerivD(const ADReal & gamma_v,
   ADReal d2f_dchi_d2 = d2yieldFunctiondDev2(chi_v, chi_d);
 
   // Over stress derivatives wrt dissipative stress
-  ADReal over_v_dchi_d = df_dchi_v * df_dchi_d + f * d2f_dchi_v_dchi_d;
-  ADReal over_d_dchi_d = Utility::pow<2>(df_dchi_d) + f * d2f_dchi_d2;
+  ADReal over_v_dchi_d =
+      std::pow(f, _n - 1.0) * (_n * df_dchi_v * df_dchi_d + f * d2f_dchi_v_dchi_d);
+  ADReal over_d_dchi_d =
+      std::pow(f, _n - 1.0) * (_n * Utility::pow<2>(df_dchi_d) + f * d2f_dchi_d2);
 
   over_v_d = over_v_dchi_d * dchi_d;
   over_d_d = over_d_dchi_d * dchi_d;
@@ -169,6 +183,12 @@ LMAlphaGammaYield::preReturnMap()
 
   _chi_v_tr = _pressure_tr - 0.5 * _gamma * _pcr_tr;
   _chi_d_tr = _eqv_stress_tr;
+
+  // Porosity-dependent viscosity
+  if (_coupled_porosity)
+    _eta_p = getParam<Real>("plastic_viscosity") * std::exp(_a / _porosity[_qp]);
+  else
+    _eta_p = getParam<Real>("plastic_viscosity");
 }
 
 void

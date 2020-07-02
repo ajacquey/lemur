@@ -22,7 +22,7 @@ public:
   LMViscoPlasticUpdate(const InputParameters & parameters);
   void setQp(unsigned int qp);
   virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                  const RankFourTensor & Cijkl,
+                                  const ADRankFourTensor & Cijkl,
                                   ADRankTwoTensor & elastic_strain_incr) = 0;
   void resetQpProperties() final {}
   void resetProperties() final {}
@@ -32,9 +32,10 @@ protected:
   const Real _abs_tol;
   const Real _rel_tol;
   const unsigned int _max_its;
-  const Real _eta_p;
+  ADReal _eta_p;
   const Real _n;
   const Real _pf0;
+  const Real _Ar;
 
   ADMaterialProperty<Real> & _yield_function;
   ADMaterialProperty<RankTwoTensor> & _plastic_strain_incr;

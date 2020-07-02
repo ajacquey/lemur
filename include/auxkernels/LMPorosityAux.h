@@ -24,9 +24,10 @@ public:
 protected:
   virtual Real computeValue() override;
 
+  const bool _coupled_pf;
   const VariableValue & _pf_dot;
-  const MaterialProperty<Real> & _biot;
-  const MaterialProperty<Real> & _K;
+  const ADMaterialProperty<Real> * _biot;
+  const ADMaterialProperty<Real> & _K;
   const ADMaterialProperty<RankTwoTensor> & _strain_incr;
   const bool _has_ve;
   const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;

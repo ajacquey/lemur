@@ -21,7 +21,7 @@ public:
   static InputParameters validParams();
   LMTwoVarUpdate(const InputParameters & parameters);
   virtual void viscoPlasticUpdate(ADRankTwoTensor & stress,
-                                  const RankFourTensor & Cijkl,
+                                  const ADRankFourTensor & Cijkl,
                                   ADRankTwoTensor & elastic_strain_incr) override;
 
 protected:

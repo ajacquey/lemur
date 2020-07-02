@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/lemur-dbg",
-            "args": ["-i", "test/tests/viscoelastic/maxwell.i"],
+            "args": ["-i", "test/tests/elasticity/hydrostat.i"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

@@ -25,7 +25,7 @@ LMFluidFlowTimeDerivative::validParams()
 
 LMFluidFlowTimeDerivative::LMFluidFlowTimeDerivative(const InputParameters & parameters)
   : ADTimeKernel(parameters),
-    _C_biot(getMaterialProperty<Real>("biot_compressibility")),
+    _C_biot(getADMaterialProperty<Real>("biot_compressibility")),
     _poro_mech(getADMaterialProperty<Real>("poro_mech"))
 {
 }

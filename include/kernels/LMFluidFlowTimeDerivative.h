@@ -24,6 +24,6 @@ public:
 protected:
   virtual ADReal computeQpResidual() override;
 
-  const MaterialProperty<Real> & _C_biot;
+  const ADMaterialProperty<Real> & _C_biot;
   const ADMaterialProperty<Real> & _poro_mech;
 };
