@@ -67,16 +67,11 @@ protected:
   virtual ADReal d2yieldFunctiondDevA(const ADReal & chi_v, const ADReal & chi_d);
   virtual ADReal d2yieldFunctiondDevB(const ADReal & chi_v, const ADReal & chi_d);
 
-  // Coupled Variables
-  const bool _coupled_porosity;
-  const VariableValue & _porosity;
-
   const Real _phi;
   const Real _pcr0;
   const Real _alpha;
   const Real _gamma;
   const Real _L;
-  const Real _a;
   const bool _has_hardening;
   ADMaterialProperty<Real> * _intnl;
   const MaterialProperty<Real> * _intnl_old;

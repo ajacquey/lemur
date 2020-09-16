@@ -34,8 +34,6 @@ protected:
   const unsigned int _max_its;
   ADReal _eta_p;
   const Real _n;
-  const Real _pf0;
-  const Real _Ar;
 
   ADMaterialProperty<Real> & _yield_function;
   ADMaterialProperty<RankTwoTensor> & _plastic_strain_incr;

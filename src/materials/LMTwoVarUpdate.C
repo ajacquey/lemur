@@ -130,8 +130,8 @@ LMTwoVarUpdate::residual(const ADReal & gamma_v,
                          ADReal & resd)
 {
   overStress(gamma_v, gamma_d, resv, resd);
-  resv -= std::pow(_eta_p, _n) * gamma_v * std::exp(_Ar * (_pf[_qp] - _pf0));
-  resd -= std::pow(_eta_p, _n) * gamma_d * std::exp(_Ar * (_pf[_qp] - _pf0));
+  resv -= std::pow(_eta_p, _n);
+  resd -= std::pow(_eta_p, _n);
 }
 
 void
@@ -144,6 +144,6 @@ LMTwoVarUpdate::jacobian(const ADReal & gamma_v,
 {
   overStressDerivV(gamma_v, gamma_d, jacvv, jacdv);
   overStressDerivD(gamma_v, gamma_d, jacvd, jacdd);
-  jacvv -= std::pow(_eta_p, _n) * std::exp(_Ar * (_pf[_qp] - _pf0));
-  jacdd -= std::pow(_eta_p, _n) * std::exp(_Ar * (_pf[_qp] - _pf0));
+  jacvv -= std::pow(_eta_p, _n);
+  jacdd -= std::pow(_eta_p, _n);
 }

@@ -20,8 +20,6 @@ LMAlphaGammaYield::validParams()
 {
   InputParameters params = LMTwoVarUpdate::validParams();
   params.addClassDescription("Viscoplastic update based on the alpha-gamma yield functions.");
-  // Coupled variables
-  params.addCoupledVar("porosity", "The porosity variable.");
   params.addRequiredRangeCheckedParam<Real>(
       "friction_angle", "friction_angle > 0.0", "The friction angle for the critical state line.");
   params.addRequiredRangeCheckedParam<Real>(
@@ -44,15 +42,11 @@ LMAlphaGammaYield::validParams()
 
 LMAlphaGammaYield::LMAlphaGammaYield(const InputParameters & parameters)
   : LMTwoVarUpdate(parameters),
-    // Coupled variables
-    _coupled_porosity(isCoupled("porosity")),
-    _porosity(_coupled_porosity ? coupledValue("porosity") : _zero),
     _phi(getParam<Real>("friction_angle")),
     _pcr0(getParam<Real>("critical_pressure")),
     _alpha(getParam<Real>("alpha")),
     _gamma(getParam<Real>("gamma")),
     _L(getParam<Real>("critical_pressure_hardening")),
-    _a(getParam<Real>("porosity_hardening")),
     _has_hardening(_L != 0.0),
     _intnl(_has_hardening ? &declareADProperty<Real>("volumetric_plastic_strain") : nullptr),
     _intnl_old(_has_hardening ? &getMaterialPropertyOld<Real>("volumetric_plastic_strain")
@@ -184,11 +178,7 @@ LMAlphaGammaYield::preReturnMap()
   _chi_v_tr = _pressure_tr - 0.5 * _gamma * _pcr_tr;
   _chi_d_tr = _eqv_stress_tr;
 
-  // Porosity-dependent viscosity
-  if (_coupled_porosity)
-    _eta_p = getParam<Real>("plastic_viscosity") * std::exp(_a / _porosity[_qp]);
-  else
-    _eta_p = getParam<Real>("plastic_viscosity");
+  _eta_p = getParam<Real>("plastic_viscosity");
 }
 
 void
