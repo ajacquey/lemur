@@ -130,8 +130,8 @@ LMTwoVarUpdate::residual(const ADReal & gamma_v,
                          ADReal & resd)
 {
   overStress(gamma_v, gamma_d, resv, resd);
-  resv -= std::pow(_eta_p, _n);
-  resd -= std::pow(_eta_p, _n);
+  resv -= std::pow(_eta_p, _n) * gamma_v;
+  resd -= std::pow(_eta_p, _n) * gamma_d;
 }
 
 void
