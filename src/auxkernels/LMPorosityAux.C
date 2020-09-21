@@ -22,6 +22,7 @@ LMPorosityAux::validParams()
   InputParameters params = AuxKernel::validParams();
   params.addClassDescription("Calculates the porosity.");
   params.addCoupledVar("fluid_pressure", 0.0, "The fluid pressure variable.");
+  params.addCoupledVar("damage", 0.0, "The damage variable.");
   return params;
 }
 
@@ -29,6 +30,9 @@ LMPorosityAux::LMPorosityAux(const InputParameters & parameters)
   : AuxKernel(parameters),
     _coupled_pf(isCoupled("fluid_pressure")),
     _pf_dot(_coupled_pf ? coupledDot("fluid_pressure") : _zero),
+    _coupled_dam(isCoupled("damage")),
+    _damage(_coupled_dam ? coupledValue("damage") : _zero),
+    _damage_dot(_coupled_dam ? coupledDot("damage") : _zero),
     _biot(_coupled_pf ? &getADMaterialProperty<Real>("biot_coefficient") : nullptr),
     _K(getADMaterialProperty<Real>("bulk_modulus")),
     _strain_incr(getADMaterialProperty<RankTwoTensor>("strain_increment")),
@@ -37,7 +41,8 @@ LMPorosityAux::LMPorosityAux(const InputParameters & parameters)
                                  : nullptr),
     _has_vp(hasADMaterialProperty<Real>("yield_function")),
     _plastic_strain_incr(_has_vp ? &getADMaterialProperty<RankTwoTensor>("plastic_strain_increment")
-                                 : nullptr)
+                                 : nullptr),
+    _stress(_coupled_dam ? &getADMaterialProperty<RankTwoTensor>("stress") : nullptr)
 {
 }
 
@@ -50,9 +55,14 @@ LMPorosityAux::computeValue()
   Real dphi_mech = (alphaB - _u[_qp]) * MetaPhysicL::raw_value(_strain_incr[_qp].trace());
   Real dphi_fl = 0.0;
   if (!MooseUtils::absoluteFuzzyEqual(MetaPhysicL::raw_value(_K[_qp]), 0.0))
-    dphi_fl =
-        (alphaB - _u[_qp]) * (1.0 - alphaB) / MetaPhysicL::raw_value(_K[_qp]) * _pf_dot[_qp] * _dt;
+    dphi_fl = (alphaB - _u[_qp]) * (1.0 - alphaB) /
+              MetaPhysicL::raw_value((1.0 - _damage[_qp]) * _K[_qp]) * _pf_dot[_qp] * _dt;
   Real dphi_in = (1.0 - alphaB) * ev_ve_incr + (1.0 - alphaB) * ev_vp_incr;
+  Real p = _coupled_dam ? -MetaPhysicL::raw_value((*_stress)[_qp].trace()) / 3.0 : 0.0;
+  Real dphi_dam = 0.0;
+  // if (!MooseUtils::absoluteFuzzyEqual(MetaPhysicL::raw_value(_K[_qp]), 0.0))
+  //   dphi_dam = - p * (1.0 - alphaB) / MetaPhysicL::raw_value(Utility::pow<2>(1.0 - _damage[_qp])
+  //   * _K[_qp]) * _damage_dot[_qp] * _dt;
 
   return _u_old[_qp] + dphi_mech + dphi_fl + dphi_in;
 }

@@ -21,6 +21,7 @@ LMPoroMaterial::validParams()
   InputParameters params = ADMaterial::validParams();
   params.addClassDescription("Computes properties for fluid flow in a porous material.");
   params.addCoupledVar("porosity", 0.0, "The porosity variable.");
+  params.addCoupledVar("damage", 0.0, "The damage variable.");
   params.addRequiredRangeCheckedParam<Real>(
       "permeability", "permeability > 0.0", "The permeability of the material.");
   params.addRequiredRangeCheckedParam<Real>(
@@ -35,6 +36,8 @@ LMPoroMaterial::validParams()
 LMPoroMaterial::LMPoroMaterial(const InputParameters & parameters)
   : ADMaterial(parameters),
     _porosity(coupledValue("porosity")),
+    _damage(adCoupledValue("damage")),
+    _damage_dot(adCoupledDot("damage")),
     _coupled_mech(hasADMaterialProperty<Real>("bulk_modulus")),
     _perm(getParam<Real>("permeability")),
     _fluid_visco(getParam<Real>("fluid_viscosity")),
@@ -49,6 +52,9 @@ LMPoroMaterial::LMPoroMaterial(const InputParameters & parameters)
     _has_vp(hasADMaterialProperty<Real>("yield_function")),
     _plastic_strain_incr(_has_vp ? &getADMaterialProperty<RankTwoTensor>("plastic_strain_increment")
                                  : nullptr),
+    _coupled_dam(hasADMaterialProperty<Real>("damage_rate")),
+    _stress((_coupled_mech && _coupled_dam) ? &getADMaterialProperty<RankTwoTensor>("stress")
+                                            : nullptr),
     _C_biot(declareADProperty<Real>("biot_compressibility")),
     _fluid_mob(declareProperty<Real>("fluid_mobility")),
     _biot(declareADProperty<Real>("biot_coefficient")),
@@ -76,7 +82,7 @@ LMPoroMaterial::computeQpProperties()
   // Biot coefficient
   _biot[_qp] = 1.0;
   if (_coupled_mech && (Cd != 0.0))
-    _biot[_qp] -= Cs / Cd;
+    _biot[_qp] -= (1.0 - _damage[_qp]) * Cs / Cd;
 
   // Storage
   _C_biot[_qp] = _porosity[_qp] * Cf;
@@ -95,5 +101,11 @@ LMPoroMaterial::computeQpProperties()
       _poro_mech[_qp] += (1.0 - _biot[_qp]) * (*_viscous_strain_incr)[_qp].trace() / _dt;
     if (_has_vp)
       _poro_mech[_qp] += (1.0 - _biot[_qp]) * (*_plastic_strain_incr)[_qp].trace() / _dt;
+    // Damage
+    // if (_coupled_dam && (_damage[_qp] != 1.0))
+    // {
+    //   ADReal p = -(*_stress)[_qp].trace() / 3.0;
+    //   _poro_mech[_qp] -= p / (1.0 - _damage[_qp]) * Cs * _damage_dot[_qp];
+    // }
   }
 }

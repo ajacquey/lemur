@@ -25,6 +25,8 @@ protected:
   virtual void computeQpProperties() override;
 
   const VariableValue & _porosity;
+  const ADVariableValue & _damage;
+  const ADVariableValue & _damage_dot;
   const bool _coupled_mech;
   const Real _perm;
   const Real _fluid_visco;
@@ -37,6 +39,8 @@ protected:
   const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;
   const bool _has_vp;
   const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
+  const bool _coupled_dam;
+  const ADMaterialProperty<RankTwoTensor> * _stress;
   ADMaterialProperty<Real> & _C_biot;
   MaterialProperty<Real> & _fluid_mob;
   ADMaterialProperty<Real> & _biot;

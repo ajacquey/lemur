@@ -26,6 +26,9 @@ protected:
 
   const bool _coupled_pf;
   const VariableValue & _pf_dot;
+  const bool _coupled_dam;
+  const VariableValue & _damage;
+  const VariableValue & _damage_dot;
   const ADMaterialProperty<Real> * _biot;
   const ADMaterialProperty<Real> & _K;
   const ADMaterialProperty<RankTwoTensor> & _strain_incr;
@@ -33,4 +36,5 @@ protected:
   const ADMaterialProperty<RankTwoTensor> * _viscous_strain_incr;
   const bool _has_vp;
   const ADMaterialProperty<RankTwoTensor> * _plastic_strain_incr;
+  const ADMaterialProperty<RankTwoTensor> * _stress;
 };

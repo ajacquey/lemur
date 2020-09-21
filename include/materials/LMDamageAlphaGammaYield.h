@@ -23,14 +23,29 @@ public:
 
 protected:
   virtual void preReturnMap() override;
+  virtual void overStress(const ADReal & gamma_v,
+                          const ADReal & gamma_d,
+                          ADReal & over_v,
+                          ADReal & over_d) override;
+  virtual void overStressDerivV(const ADReal & gamma_v,
+                                const ADReal & gamma_d,
+                                ADReal & over_v_v,
+                                ADReal & over_d_v) override;
+  virtual void overStressDerivD(const ADReal & gamma_v,
+                                const ADReal & gamma_d,
+                                ADReal & over_v_d,
+                                ADReal & over_d_d) override;
   virtual void updateYieldParameters(const ADReal & gamma_v) override;
   virtual void updateYieldParametersDerivV(ADReal & dA, ADReal & dB) override;
   virtual void postReturnMap(const ADReal & gamma_v, const ADReal & gamma_d) override;
 
   // Coupled variables
   const ADVariableValue & _damage;
-  // Damage viscosity
-  const Real _eta_a;
+  // // Damage viscosity
+  // const Real _eta_a;
+  // Dissipation contributions
+  const Real _rv;
+  const Real _rs;
 
   // Properties
   ADMaterialProperty<Real> & _damage_rate;
