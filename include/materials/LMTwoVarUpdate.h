@@ -54,6 +54,10 @@ protected:
                                        ADReal & chi_v,
                                        ADReal & chi_d) = 0;
 
+  const ADVariableValue & _pf;
+  const Real _pf0;
+  const Real _Ar;
+
   ADRankTwoTensor _stress_tr;
   ADReal _K;
   ADReal _G;

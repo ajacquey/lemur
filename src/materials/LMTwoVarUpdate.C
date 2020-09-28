@@ -19,11 +19,24 @@ LMTwoVarUpdate::validParams()
 {
   InputParameters params = LMViscoPlasticUpdate::validParams();
   params.addClassDescription("Base class for a single variable viscoplastic update.");
+  params.addCoupledVar("fluid_pressure", 0, "The fluid pressure variable.");
+  params.addRangeCheckedParam<Real>("reference_fluid_pressure",
+                                    0.0,
+                                    "reference_fluid_pressure>0.0",
+                                    "The reference fluid pressure.");
+  params.addRangeCheckedParam<Real>(
+      "Arrhenius_coefficient",
+      0.0,
+      "Arrhenius_coefficient>=0",
+      "The Arrhenius coefficient for the fludi pressure activated viscosity.");
   return params;
 }
 
 LMTwoVarUpdate::LMTwoVarUpdate(const InputParameters & parameters)
-  : LMViscoPlasticUpdate(parameters)
+  : LMViscoPlasticUpdate(parameters),
+    _pf(adCoupledValue("fluid_pressure")),
+    _pf0(getParam<Real>("reference_fluid_pressure")),
+    _Ar(getParam<Real>("Arrhenius_coefficient"))
 {
 }
 
@@ -130,8 +143,8 @@ LMTwoVarUpdate::residual(const ADReal & gamma_v,
                          ADReal & resd)
 {
   overStress(gamma_v, gamma_d, resv, resd);
-  resv -= std::pow(_eta_p, _n) * gamma_v;
-  resd -= std::pow(_eta_p, _n) * gamma_d;
+  resv -= std::pow(_eta_p, _n) * gamma_v * std::exp(_Ar * (_pf[_qp] - _pf0));
+  resd -= std::pow(_eta_p, _n) * gamma_d * std::exp(_Ar * (_pf[_qp] - _pf0));
 }
 
 void
@@ -144,6 +157,6 @@ LMTwoVarUpdate::jacobian(const ADReal & gamma_v,
 {
   overStressDerivV(gamma_v, gamma_d, jacvv, jacdv);
   overStressDerivD(gamma_v, gamma_d, jacvd, jacdd);
-  jacvv -= std::pow(_eta_p, _n);
-  jacdd -= std::pow(_eta_p, _n);
+  jacvv -= std::pow(_eta_p, _n) * std::exp(_Ar * (_pf[_qp] - _pf0));
+  jacdd -= std::pow(_eta_p, _n) * std::exp(_Ar * (_pf[_qp] - _pf0));
 }
