@@ -22,7 +22,7 @@ LMTwoVarUpdate::validParams()
   params.addCoupledVar("fluid_pressure", 0, "The fluid pressure variable.");
   params.addRangeCheckedParam<Real>("reference_fluid_pressure",
                                     0.0,
-                                    "reference_fluid_pressure>0.0",
+                                    "reference_fluid_pressure>=0.0",
                                     "The reference fluid pressure.");
   params.addRangeCheckedParam<Real>(
       "Arrhenius_coefficient",
