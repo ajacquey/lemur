@@ -1,6 +1,4 @@
-Lemur
+LEMUR
 =====
 
-"Fork Lemur" to create a new MOOSE-based application.
-
-For more information see: [http://mooseframework.org/create-an-app/](http://mooseframework.org/create-an-app/)
+LEMUR (muLtiphysics of gEomaterials using MUltiscale Rheologies) is a [MOOSE](http://mooseframework.org)-based application to model the mechanical behavior of porous rocks based on thermomechanics theory.

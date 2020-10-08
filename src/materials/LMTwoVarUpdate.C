@@ -28,7 +28,7 @@ LMTwoVarUpdate::validParams()
       "Arrhenius_coefficient",
       0.0,
       "Arrhenius_coefficient>=0",
-      "The Arrhenius coefficient for the fludi pressure activated viscosity.");
+      "The Arrhenius coefficient for the fluid pressure activated viscosity.");
   return params;
 }
 
