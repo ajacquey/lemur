@@ -24,6 +24,7 @@ public:
 protected:
   virtual Real computeValue() override;
 
+  const VariableValue & _u_old;
   const bool _coupled_pf;
   const VariableValue & _pf_dot;
   const bool _coupled_dam;
