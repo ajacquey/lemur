@@ -163,8 +163,9 @@ LMMechMaterialBase::computeQpProperties()
 void
 LMMechMaterialBase::computeQpStrainIncrement()
 {
-  ADRankTwoTensor grad_tensor((*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]);
-  RankTwoTensor grad_tensor_old(
+  ADRankTwoTensor grad_tensor = ADRankTwoTensor::initializeFromRows(
+      (*_grad_disp[0])[_qp], (*_grad_disp[1])[_qp], (*_grad_disp[2])[_qp]);
+  RankTwoTensor grad_tensor_old = RankTwoTensor::initializeFromRows(
       (*_grad_disp_old[0])[_qp], (*_grad_disp_old[1])[_qp], (*_grad_disp_old[2])[_qp]);
 
   switch (_strain_model)
